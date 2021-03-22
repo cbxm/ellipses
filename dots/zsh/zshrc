@@ -1,0 +1,85 @@
+# ========== .dotdot, meet zsh. We're good friends. ====================================
+
+#
+# My primary configuration for zsh.
+#
+# Theme setup and personal aliases are kept in their own rc files and sourced from here.
+# 
+
+# ========== SETUP =====================================================================
+
+# === Zsh ==============================================================================
+
+# Define a folder for private funcs, to be lazy-loaded by `zsh`,
+# and prepend it to $fpath, to enable overriding of other functions.
+fpath=( ~/.config/zsh/funcs "${fpath[@]}")
+
+
+# === Oh-My-Zsh ========================================================================
+
+ZSH=~/.config/zsh/plugs/omz		# base oh-my-zsh directory
+
+HYPHEN_INSENSITIVE="true"		# ignore hyphens for autocompletion
+DISABLE_UNTRACKED_FILES_DIRTY="true"	# ignore untracked git files at the prompt
+ 
+plugins=(
+	# common-aliases      # better to handpick from these
+	fzf                   # CTRL+R(hist), T(dirs), & ALT-C(cd) for fzf at the prompt
+	git                   # the common git aliases I love
+	gitignore             # useful .gitignore tool. use `gi [template] >> [file]`
+	poetry                # auto-invoke a poetry env when inside a project
+	sudo                  # double-tap ESC to go get the damn `sudo`
+	z                     # fast jumping to visited directories by 'frecency'
+	zsh_reload            # `src` to recompile and source zshrc
+)
+
+
+# ========== ENVIRONMENT ===============================================================
+
+# === Add'l Rice Files =================================================================
+
+DOT_ZSHRC="$HOME/.config/zsh"		# base directory
+
+source "$DOT_ZSHRC/aliases.zshrc"	# a place for ALL my aliases...
+source "$DOT_ZSHRC/theme.zshrc"		# and then one for all my theme stuff!
+
+
+# === Variables ========================================================================
+
+EDITOR='nvim'					# Set my editor.
+TMUX_CONF="$HOME/.config/tmux/tmux.conf" 	# Point to my default TMUX config. 
+OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | tr '[:upper:]' '[:lower:]')
+						# Fetch the current distro's name.
+
+# === Extra Paths ======================================================================
+
+# A few platforms keep their bin folders in the home directory.
+# We're just adding them to the $PATH so that we can use the 
+# utilities we've installed through them.
+
+PATH="$HOME/go/bin:$PATH"          	# for Golang
+PATH="$HOME/.local/bin:$PATH"      	# and misc executables
+GEM_HOME="$HOME/.config/gems"           # Install Ruby Gems to ~/.config/gems/
+PATH="$GEM_HOME/bin:$PATH"              # and add that to $PATH
+PATH="$HOME/.poetry/bin:$PATH"          # Fix for WSL: should be benign on *nix
+PATH="$HOME/bin:$PATH"			# Add user's `bin` to PATH
+
+
+# ========== KICK-OFF ==================================================================
+
+# === Zsh and OMZ ======================================================================
+
+source $ZSH/oh-my-zsh.sh 			# punt OMZ
+
+# These two plugins were installed by package manager, and not via OMZ or git cloning.
+# This switch case is to source them properly for each distro I use. 
+# Additionally, zsh-autosuggestions requires being sourced last.
+if [ $OS = "ubuntu" ]; then 
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+elif [ $OS = "arch" ]; then 
+    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+# TODO: turn this check into a variable and source each of them off a root dir
+

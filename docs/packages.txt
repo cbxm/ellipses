@@ -1,0 +1,9 @@
+zsh
+tmux
+tmux
+zsh
+fzf
+zsh-autosuggestion
+zsh-syntax-highlighting
+zsh-poetry
+glow

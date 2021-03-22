@@ -39,13 +39,17 @@ colorscheme dracula
 
 " === UI ===============================================================================
 " Set sidebar numbers.  
-set number
-set relativenumber
+" set number
+" set relativenumber
+" NOTE: I don't want these on by default. I have keybinds for them now.
+
+
 " cursor padding at the top and bottom when scrolling
-set scrolloff=15
+set scrolloff=8
 " I like to be reminded how wide my files are.
 " ...thanks, Python.
-set colorcolumn=89
+" NOTE: Off by default. user <leader>nn to turn them (and line numbers) on.
+" set colorcolumn=89
 " set the color of the ruler on the right.
 hi ColorColumn ctermbg=236 guibg=236
 " Tell word wrap to break entire words
@@ -96,7 +100,9 @@ nnoremap <Leader>vr :source ~/.config/nvim/init.vim<CR>
 
 " CTRL-Backspace an entire word
 imap <C-BS> <C-W>
+" ^^ didn't work...
 
+set clipboard=unnamedplus
 
 
 " Something to append = signs to the line.
@@ -108,6 +114,17 @@ function! Append(c)
 endfunction
 nnoremap <expr> m ':call Append('.getchar().")\<CR>"')'
 
+
+" okay, it's my own attempt to write system yank shortcuts.
+nnoremap <Leader>y "*y
+nnoremap <Leader>Y "+y
+vnoremap <Leader>y "*y
+vnoremap <Leader>Y "+y
+
+nnoremap <Leader>p "*p
+nnoremap <Leader>P "+p
+vnoremap <Leader>p "*p
+vnoremap <Leader>P "+p
 
 
 " ...and a voila.

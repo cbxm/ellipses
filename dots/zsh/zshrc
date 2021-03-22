@@ -47,6 +47,7 @@ source "$DOT_ZSHRC/theme.zshrc"		# and then one for all my theme stuff!
 # === Variables ========================================================================
 
 EDITOR='nvim'					# Set my editor.
+GIT_EDITOR='nvim'					# Set my editor.
 TMUX_CONF="$HOME/.config/tmux/tmux.conf" 	# Point to my default TMUX config. 
 OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | tr '[:upper:]' '[:lower:]')
 						# Fetch the current distro's name.

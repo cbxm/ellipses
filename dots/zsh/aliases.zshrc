@@ -32,9 +32,10 @@ alias gaf='git add -f'
 
 # === "The System" =====================================================================
 
-alias todo='vim ~/me/.todo.txt'
-alias note='vim ~/me/.quick.md'
-alias scratch='vim ~/me/_scratch.md'
+alias task='vim ~/me/.task.md'
+alias todo='vim ~/me/.todo.md'
+alias inbx='vim ~/me/.inbox.md'
+alias note='vim ~/me/_scratch.md'
 
 # === Quick Edit Various Dots [currently broken] =======================================
 
@@ -53,3 +54,17 @@ alias t='tmux attach -t Main'           	# attach to systemd-launched session
 alias tm='tmux -f $TMUX_CONF new -d'		# new session with no name
 alias tmn='tmux -f $TMUX_CONF new -d -s'	# new session with specified name
 alias tmm='tmux -f $TMUX_CONF new -d -s Main'	# start new session with name "main"
+
+
+
+# === === SORT LATER === ===
+
+
+alias td='termdown -bs --no-figlet'
+alias pom='td --title "pomo" 30m'
+alias pomb='td --title "pomo break" 5m'
+alias tt='td --title'
+alias tt-mc='td --title "To Market Close" 2pm'
+alias tt-bed='td --title "Bedtime" 10pm'
+alias tt-focus='td --title "rem. in session"'
+

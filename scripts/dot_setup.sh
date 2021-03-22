@@ -1,50 +1,28 @@
-#!/bin/sh
+#!/usr/bin/env zsh
 
-#####   SETUP   #####
+# === === === === === ===
+# === Dot File Setup  ===
+# === === === === === ===
 
-# TODO: backup all the .config folders that I'll be symlinking later.
-
-
-
-#####   git   ##### 
-
-# git config --global user.name "Caden Bloxham"
-# git config --global user.email "cadenblox@gmail.com"
-# git config advice.addIgnoredFile false
-# TODO: install GPG keys
+# This script's intended purpose is to symlink all the 
+# ~/.config/ I use and THAT'S IT. Backup happens elsewhere.
+# TODO: Gee, I really should turn this all into a Python script.
 
 
-#####   systemd   #####
+# === Here we go! ===
 
-# link .config/ to dotdot/ folder
-ln -s /home/cbxm/dotdot/dots/systemd /home/cbxm/.config/systemd
+# === Zsh
 
-# Allow user processes to linger
-loginctl enable-linger cbxm
+ln -s /home/cbxm/.dotdot/dots/zsh /home/cbxm/.config/zsh
+ln -s /home/cbxm/.config/zsh/zshrc /home/cbxm/.zshrc
 
-# TODO: change KillUserProcesses to equal 'no' in /etc/systemd/logind.conf
+# === Tmux
+ln -s /home/cbxm/.dotdot/dots/tmux /home/cbxm/.config/tmux
 
+# === Neovim
+ln -s /home/cbxm/.dotdot/dots/nvim /home/cbxm/.config/nvim
 
-
-#####   zsh   #####
-
-ln -s /home/cbxm/dotdot/dots/zsh/.zshrc /home/cbxm/.zshrc
-
-
-#####   neovim   #####
+# === Glow
+ln -s /home/cbxm/.dotdot/dots/glow /home/cbxm/.config/glow
 
 
-
-#####   tmux   #####
-
-ln -s /home/cbxm/dotdot/dots/tmux/ /home/cbxm/.config/tmux/
-
-# Install tpm via git
-git clone git@github.com:tmux-plugins/tpm ~/dotdot/dots/tmux/plugins/tpm
-
-# The service file is already linked from dots/systemd above,
-# so we just enable it for my user right here.
-systemctl --user enable tmux.service
-
-# Once this is done, still need to run <C-b><I> to install plugins
-~/.config/tmux/plugins/tpm/bin/install_plugins

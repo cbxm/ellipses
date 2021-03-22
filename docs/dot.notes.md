@@ -1,5 +1,7 @@
 # It's the Dotfile Project!
-...it's the TODOtfile.
+...it's the TODO-tfile.
+...the to-DOT-file...
+...the to-doot. file.
 
 
 ### Here's what's left to do:
@@ -11,6 +13,15 @@
   * [ ] change vim dracula theme so that Markdown highlights will pop more.
     * I'm lookin' at you, h1.
   * [ ] :noh
+
+change all vim on/off bindings to use "i" and "o"
+change all tab left/right bindings to use "m" and "n"
+
+aliases for termdown:
+alias 20m='termdown -bs --title "pomo" 20m --no-figlet'
+
+
+
 
 ## Dotfile Management
 
@@ -59,7 +70,7 @@
 
 
 > NOTE: My preferred `strftime` format is:  
->   Time: 8:45pm      -  "%l:%M%P  
+>   Time: 8:45pm      -  "%l:%M%P"
 >   Date: Thu, Mar 03 - "%a, %b %d"  
 
 

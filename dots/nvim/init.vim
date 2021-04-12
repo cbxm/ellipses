@@ -23,9 +23,12 @@ Plug 'preservim/nerdtree'
 
 " === Dev
 Plug 'jiangmiao/auto-pairs'
-Plug 'airblade/vim-gitgutter'
+" Plug 'airblade/vim-gitgutter'  " so obnoxious!
 Plug 'davidhalter/jedi-vim'
 Plug 'jkramer/vim-checkbox'
+Plug 'tpope/vim-dadbod'
+Plug 'kristijanhusak/vim-dadbod-ui'
+
 
 call plug#end()
  
@@ -128,3 +131,5 @@ vnoremap <Leader>P "+p
 
 
 " ...and a voila.
+
+nnoremap <Leader>ho :noh<CR>

@@ -27,7 +27,7 @@ plugins=(
 	fzf                   # CTRL+R(hist), T(dirs), & ALT-C(cd) for fzf at the prompt
 	git                   # the common git aliases I love
 	gitignore             # useful .gitignore tool. use `gi [template] >> [file]`
-	poetry                # auto-invoke a poetry env when inside a project
+	# poetry                # auto-invoke a poetry env when inside a project
 	sudo                  # double-tap ESC to go get the damn `sudo`
 	z                     # fast jumping to visited directories by 'frecency'
 	zsh_reload            # `src` to recompile and source zshrc

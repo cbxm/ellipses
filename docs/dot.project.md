@@ -3,9 +3,13 @@
 ...the to-DOT-file...
 ...the to-doot. file.
 
+### === Inbox ===
 
-### Here's what's left to do:
+nested tmux sessions, to keep timers up top
 
+* [ ] fix ls colors
+  * white on green for directories is abysmal
+* [ ] tmux pane switching when CTRL is held, too.
 * [ ] shortcuts for:
   * [ ] this damn checkbox
   * [ ] tmux sync panes
@@ -16,11 +20,6 @@
 
 change all vim on/off bindings to use "i" and "o"
 change all tab left/right bindings to use "m" and "n"
-
-aliases for termdown:
-alias 20m='termdown -bs --title "pomo" 20m --no-figlet'
-
-
 
 
 ## Dotfile Management
@@ -67,9 +66,10 @@ alias 20m='termdown -bs --title "pomo" 20m --no-figlet'
 * [ ] I'd really like the active pane title to change to a different color
 * [ ] remove arrows from tmux window bar
 * [ ] maybe changing that will fix the weirdness with the `pane` indicator, too.
+* [ ] remove whole third line
+* [ ] either change the date to MM/DD/YY, or add it alongside
 
-
-> NOTE: My preferred `strftime` format is:  
+> NOTE: Preferred `strftime` format:  
 >   Time: 8:45pm      -  "%l:%M%P"
 >   Date: Thu, Mar 03 - "%a, %b %d"  
 

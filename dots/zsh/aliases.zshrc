@@ -59,12 +59,14 @@ alias tmm='tmux -f $TMUX_CONF new -d -s Main'	# start new session with name "mai
 
 # === === SORT LATER === ===
 
-
 alias td='termdown -bs --no-figlet'
-alias pom='td --title "pomo" 30m'
-alias pomb='td --title "pomo break" 5m'
+alias pom='td --title "Pomo" 25m'
+alias pomb='td --title "Pomo Break" 5m'
+alias brk='td --title "15m Break" 15m'
 alias tt='td --title'
 alias tt-mc='td --title "To Market Close" 2pm'
 alias tt-bed='td --title "Bedtime" 10pm'
-alias tt-focus='td --title "rem. in session"'
+alias tts='td --title "Session"'
+alias ttm='td --title "Meetings"'
+
 

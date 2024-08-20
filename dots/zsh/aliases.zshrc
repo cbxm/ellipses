@@ -28,13 +28,14 @@ alias lse='ls -A'                       # the hidden files view I like most
 # === Git ==============================================================================
 
 alias gaf='git add -f'
+alias gs='git status'
 
 
 # === "The System" =====================================================================
 
-alias todo='vim ~/me/.todo.txt'
-alias note='vim ~/me/.quick.md'
-alias scratch='vim ~/me/_scratch.md'
+# alias todo='vim ~/me/.todo.txt'
+# alias note='vim ~/me/.quick.md'
+# alias scratch='vim ~/me/_scratch.md'
 
 # === Quick Edit Various Dots [currently broken] =======================================
 
@@ -46,10 +47,10 @@ alias dottmux='vim ~/.config/tmux/'
 # alias doti3='vim ~/.config/i3/i3.config'        # I think this path might be wrong
 
 
-# === tmux shortcuts
+# === tmux shortcuts ===================================================================
 
-alias tls='tmux ls'				# list sessions
-alias t='tmux attach -t Main'           	# attach to systemd-launched session
-alias tm='tmux -f $TMUX_CONF new -d'		# new session with no name
-alias tmn='tmux -f $TMUX_CONF new -d -s'	# new session with specified name
+alias tls='tmux ls'				                # list sessions
+alias t='tmux attach -t Main'           	    # attach to systemd-launched session
+alias tm='tmux -f $TMUX_CONF new -d'		    # new session with no name
+alias tmn='tmux -f $TMUX_CONF new -d -s'	    # new session with specified name
 alias tmm='tmux -f $TMUX_CONF new -d -s Main'	# start new session with name "main"

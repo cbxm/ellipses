@@ -1,8 +1,0 @@
-# set word-wrap to 88
-width: 88
-# local files only; no network
-local: true
-# mouse support
-mouse: true
-# use pager mode
-pager: true

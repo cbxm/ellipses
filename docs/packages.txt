@@ -1,9 +1,13 @@
 zsh
+code
+nvim
+git
+nodejs
 tmux
-tmux
-zsh
 fzf
 zsh-autosuggestion
 zsh-syntax-highlighting
 zsh-poetry
-glow
+nnn
+ranger
+stow

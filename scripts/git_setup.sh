@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Git and GitHub Setup and Configuration Script
+#
+# This script sets up Git, configures user settings, generates a GPG key for signing commits,
+# sets up SSH for GitHub, installs the GitHub CLI, and configures the necessary environment.
+#
+# Usage from a parent script:
+#   ./git_setup.sh -c script_configs/git.conf
+#
+# The config file (git.conf) should be in the format output by 'git config --list', e.g.:
+#   user.name=Jane Doe
+#   user.email=jane.doe@example.com
+#   core.editor=vim
+#
+# If no config file is provided, or if certain settings are missing, the script will prompt for input.
+# Command-line arguments take precedence over config file settings.
+#
+# For full usage information, run: ./git_setup.sh -h
+
 set -e  # Exit immediately if a command exits with a non-zero status.
 
 # Default values
@@ -23,13 +41,6 @@ print_usage() {
     echo "  user.name         Git username"
     echo "  user.email        Git email"
     echo "  core.editor       Preferred text editor"
-    echo
-    echo "Example config file content:"
-    echo "  user.name=Jane Doe"
-    echo "  user.email=jane.doe@example.com"
-    echo "  core.editor=vim"
-    echo
-    echo "Note: Command-line arguments take precedence over config file values."
 }
 
 # Parse command-line arguments
@@ -53,6 +64,8 @@ command_exists() {
 set_default_editor() {
     if command_exists nvim; then
         echo "nvim"
+    elif command_exists vim; then
+        echo "vim"
     else
         echo "nano"
     fi
@@ -138,15 +151,37 @@ configure_git() {
     git config --global user.email "$GIT_EMAIL"
     git config --global core.editor "$GIT_EDITOR"
     git config --global init.defaultbranch "main"
+    
+    # Configure GitHub URLs to use SSH instead of HTTPS
+    git config --global url."ssh://git@github.com/".insteadOf "https://github.com/"
+    
+    # Add GPG configurations
+    git config --global gpg.program gpg
+    git config --global commit.gpgsign true
+    
     echo "Git user settings have been configured."
     echo "Editor set to: $GIT_EDITOR"
+    echo "GitHub URLs will now use SSH instead of HTTPS."
+    echo "GPG signing has been enabled for commits."
 }
 
 # Generate GPG key and configure Git to use it
 generate_gpg_key_and_configure() {
     if ! command_exists gpg; then
         echo "GPG is not installed. Installing GPG..."
-        # ... [GPG installation code remains unchanged] ...
+        if command_exists apt-get; then
+            sudo apt-get update
+            sudo apt-get install -y gnupg
+        elif command_exists brew; then
+            brew install gnupg
+        elif command_exists dnf; then
+            sudo dnf install -y gnupg
+        elif command_exists pacman; then
+            sudo pacman -S --noconfirm gnupg
+        else
+            echo "Error: Supported package manager not found. Please install GPG manually."
+            exit 1
+        fi
     fi
 
     echo "Generating GPG key..."
@@ -225,13 +260,89 @@ EOF
     echo "To avoid entering it repeatedly, you can configure gpg-agent to cache your passphrase."
 }
 
+# Function to generate SSH key
+generate_ssh_key() {
+    if [ ! -f ~/.ssh/id_ed25519 ]; then
+        echo "Generating new SSH key..."
+        ssh-keygen -t ed25519 -C "$GIT_EMAIL" -f ~/.ssh/id_ed25519 -N ""
+        eval "$(ssh-agent -s)"
+        ssh-add ~/.ssh/id_ed25519
+        echo "New SSH key generated and added to ssh-agent."
+        echo "Please add the following public key to your GitHub account:"
+        cat ~/.ssh/id_ed25519.pub
+    else
+        echo "SSH key already exists. Skipping generation."
+    fi
+}
+
+# Function to install GitHub CLI
+install_github_cli() {
+    if ! command_exists gh; then
+        echo "Installing GitHub CLI..."
+        if command_exists apt-get; then
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update
+            sudo apt install gh
+        elif command_exists brew; then
+            brew install gh
+        elif command_exists dnf; then
+            sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+            sudo dnf install gh
+        elif command_exists pacman; then
+            sudo pacman -S github-cli
+        else
+            echo "Error: Unsupported package manager. Please install GitHub CLI manually."
+            return 1
+        fi
+    else
+        echo "GitHub CLI is already installed."
+    fi
+}
+
+# Function to set up GitHub CLI
+setup_github_cli() {
+    echo "Setting up GitHub CLI..."
+    gh auth login --web
+}
+
+# Function to update .zshrc
+update_zshrc() {
+    local zshrc="$HOME/.zshrc"
+    if [ -f "$zshrc" ]; then
+        if ! grep -q "export GPG_TTY=" "$zshrc"; then
+            echo 'export GPG_TTY=$(tty)' >> "$zshrc"
+            echo "Added GPG_TTY export to .zshrc"
+        else
+            echo "GPG_TTY export already exists in .zshrc"
+        fi
+    else
+        echo 'export GPG_TTY=$(tty)' > "$zshrc"
+        echo "Created .zshrc with GPG_TTY export"
+    fi
+    echo "To apply changes to your current session, run: source $zshrc"
+}
+
 # Main script execution
-echo "Starting Git setup and configuration..."
+echo "Starting Git and GitHub setup and configuration..."
 install_git
 configure_git
 if generate_gpg_key_and_configure; then
-    echo "Git setup and configuration completed successfully."
+    echo "GPG key generation and configuration completed successfully."
 else
-    echo "Git setup completed, but there were issues with GPG key generation."
-    echo "Please review the output above and consider generating a GPG key manually."
+    echo "GPG key setup had issues. Please review the output above."
 fi
+
+generate_ssh_key
+
+if install_github_cli; then
+    setup_github_cli
+else
+    echo "GitHub CLI installation failed. Please install manually if needed."
+fi
+
+update_zshrc
+
+echo "Git and GitHub setup and configuration completed."
+echo "Remember to add your SSH public key to your GitHub account if you haven't already."
+echo "To apply the .zshrc changes, restart your terminal or run: source ~/.zshrc"

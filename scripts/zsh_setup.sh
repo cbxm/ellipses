@@ -1,11 +1,9 @@
 #!/bin/bash
 
-#!/bin/bash
-
-# Zsh Installation Script
-# -----------------------
+# Zsh and Powerlevel10k Installation Script
+# -----------------------------------------
 # This script installs Zsh, sets it as the default shell,
-# and optionally installs Oh My Zsh.
+# optionally installs Oh My Zsh, and optionally installs the Powerlevel10k theme.
 #
 # Usage:
 #   1. When called from a parent setup script:
@@ -20,6 +18,7 @@
 #
 # Dependencies:
 #   - curl (for Oh My Zsh installation)
+#   - git (for Powerlevel10k installation)
 #   - sudo privileges (for package installation and changing default shell)
 
 set -e  # Exit immediately if a command exits with a non-zero status.
@@ -55,16 +54,35 @@ set_zsh_default() {
     chsh -s $(which zsh)
 }
 
-# Function to install Oh My Zsh (optional)
+# Function to install Oh My Zsh
 install_oh_my_zsh() {
     print_color "YELLOW" "Would you like to install Oh My Zsh? (y/n)"
     read -r install_omz
 
     if [[ $install_omz =~ ^[Yy]$ ]]; then
         print_color "YELLOW" "Installing Oh My Zsh..."
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        print_color "GREEN" "Oh My Zsh installed successfully."
+        return 0
     else
         print_color "YELLOW" "Skipping Oh My Zsh installation."
+        return 1
+    fi
+}
+
+# Function to install Powerlevel10k
+install_powerlevel10k() {
+    print_color "YELLOW" "Would you like to install the Powerlevel10k theme? (y/n)"
+    read -r install_p10k
+
+    if [[ $install_p10k =~ ^[Yy]$ ]]; then
+        print_color "YELLOW" "Installing Powerlevel10k..."
+        git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+        sed -i 's/ZSH_THEME=".*"/ZSH_THEME="powerlevel10k\/powerlevel10k"/' ~/.zshrc
+        print_color "GREEN" "Powerlevel10k installed successfully."
+        print_color "YELLOW" "Please run 'p10k configure' after restarting your shell to set up Powerlevel10k."
+    else
+        print_color "YELLOW" "Skipping Powerlevel10k installation."
     fi
 }
 
@@ -86,7 +104,9 @@ main() {
     install_zsh
     set_zsh_default
     verify_installation
-    install_oh_my_zsh
+    if install_oh_my_zsh; then
+        install_powerlevel10k
+    fi
 
     print_color "GREEN" "Installation complete. Please log out and log back in for the changes to take effect."
     print_color "YELLOW" "After logging back in, your default shell will be Zsh."

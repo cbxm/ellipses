@@ -6,12 +6,12 @@
 
 ZSH_THEME="powerlevel10k/powerlevel10k"				# Classic.
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# To customize prompt, run `p10k configure` or edit ~/.config/p10k/.p10k.zsh
+[[ ! -f ~/.config/p10k/.p10k.zsh ]] || source ~/.config/p10k/.p10k.zsh
 
 # === fzf ==============================================================================
 
-# Yes, more vamp-vibes.
+# Yessss, more vamp-vibes.
 # export FZF_DEFAULT_OPTS='
 #   --layout=reverse
 #   --inline-info

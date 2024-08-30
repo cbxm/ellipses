@@ -38,12 +38,13 @@ plugins=(
 	fzf                        			# CTRL+R(hist), T(dirs), & ALT-C(cd) for fzf at the prompt
 	git                        			# the common git aliases I love
 	gitignore                  			# useful .gitignore tool. use `gi [template] >> [file]`
+	gh									# auto-completion for the GitHub CLI
+	magic-enter							# bind 'git status -u .' and 'ls -lh .' to Enter
 	poetry                     			# auto-invoke a poetry env when inside a project
 	sudo                       			# double-tap ESC to go get the damn `sudo`
 	z                          			# fast jumping to visited directories by 'frecency'
-	zsh_reload                 			# `src` to recompile and source zshrc
 	zsh-autosuggestions        			# command completion based on history
-	zsh-syntax-highlighting    			# highlight commands as you type
+	zsh-syntax-highlighting    			# highlight commands as you type. must be sourced last.
 )
 
 
@@ -54,7 +55,17 @@ plugins=(
 DOT_ZSHRC="$HOME/.config/zsh"		# base directory
 
 source "$DOT_ZSHRC/aliases.zshrc"	# a place for ALL my aliases...
-source "$DOT_ZSHRC/theme.zshrc"		# and then one for all my theme stuff!
+# source "$DOT_ZSHRC/theme.zshrc"		# and then one for all my theme stuff! [deprecated, theme is now inline]
+
+
+# ========== THEME =====================================================================
+
+ZSH_THEME="powerlevel10k/powerlevel10k"				# Classic.
+
+# To customize prompt, run `p10k configure` or edit ~/.config/p10k/.p10k.zsh
+[[ ! -f ~/.config/p10k/.p10k.zsh ]] || source ~/.config/p10k/.p10k.zsh
+
+
 
 
 # === Variables ========================================================================
@@ -79,27 +90,14 @@ PATH="$HOME/bin:$PATH"					# Add user's `bin` to PATH
 
 # === Misc =============================================================================
 
-# GPG configuration
-# This sets the GPG_TTY to the current TTY, which is necessary for GPG to prompt for passwords
+export GPG_TTY=$(tty)					# fixes gpg passphrase prompts
 
-export GPG_TTY=$(tty)
+# zstyle ':omz:update' mode disabled  	# disable automatic updates
+# zstyle ':omz:update' mode auto      	# update automatically without asking
+zstyle ':omz:update' mode reminder  	# just remind me to update when it's time
 
 
 # ========== KICK-OFF ==================================================================
 
-# === Zsh and OMZ ======================================================================
-
-source $ZSH/oh-my-zsh.sh 				# punt OMZ
-
-# These two plugins were installed by package manager, and not via OMZ or git cloning.
-# This switch case is to source them properly for each distro I use. 
-# Additionally, zsh-autosuggestions requires being sourced last.
-if [ $OS = "ubuntu" ]; then 
-    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-elif [ $OS = "arch" ]; then 
-    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-fi
-# TODO: turn this check into a variable and source each of them off a root dir
-
+source $ZSH/oh-my-zsh.sh 													# punt OMZ
+[[ ! -f ~/.config/p10k/.p10k.zsh ]] || source ~/.config/p10k/.p10k.zsh 		# punt p10k

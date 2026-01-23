@@ -1,0 +1,19 @@
+#!/bin/bash
+bat=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null || echo 50)
+status=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null || echo "Unknown")
+
+if [ "$bat" -lt 20 ]; then
+  c='#c4746e'
+elif [ "$bat" -lt 50 ]; then
+  c='#c4b28a'
+else
+  c='#8a9a7b'
+fi
+
+if [ "$status" = "Charging" ]; then
+  icon=$'\U000f06a5'
+else
+  icon=$'\U000f0079'
+fi
+
+printf '#[fg=#181616,bg=%s] %s %s%% ' "$c" "$icon" "$bat"

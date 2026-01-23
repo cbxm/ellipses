@@ -1,0 +1,12 @@
+{
+  "agents": {
+    "claude-code": {
+      "profile": {
+        "baseProfile": "cbxm"
+      }
+    }
+  },
+  "autoupdate": "disabled",
+  "version": "1.0.0",
+  "installDir": "C:\\Users\\caden"
+}

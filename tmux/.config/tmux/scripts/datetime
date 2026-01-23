@@ -1,0 +1,3 @@
+#!/bin/bash
+icon=$'\uf017'
+printf '#[fg=#181616 bg=#8ba4b0] %s %s ' "$icon" "$(date +'%b %d │ %-I:%M %p')"

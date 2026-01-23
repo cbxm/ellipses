@@ -1,0 +1,35 @@
+#!/bin/bash
+# Get RAM and swap in GB with decimal precision
+read ram swap <<< $(free -b | awk '
+  /Mem:/ { ram=$3/1073741824 }
+  /Swap:/ { swap=$3/1073741824 }
+  END { printf "%.1f %.1f", ram, swap }
+')
+
+# RAM color thresholds (for ~13GB system)
+ram_int=${ram%.*}
+if [ "$ram_int" -gt 11 ]; then
+  c='#c4746e'
+elif [ "$ram_int" -gt 8 ]; then
+  c='#c4b28a'
+else
+  c='#8a9a7b'
+fi
+
+ram_icon=$'\uf2db'
+swap_icon=$'\uf1c0'
+
+if (( $(echo "$swap > 0.1" | bc -l) )); then
+  # Swap color
+  swap_int=${swap%.*}
+  if [ "$swap_int" -gt 40 ]; then
+    sc='#c4746e'
+  elif [ "$swap_int" -gt 20 ]; then
+    sc='#c4b28a'
+  else
+    sc='#8a9a7b'
+  fi
+  printf '#[fg=#181616,bg=%s] %s %s #[fg=#181616,bg=%s] %s %s ' "$c" "$ram_icon" "$ram" "$sc" "$swap_icon" "$swap"
+else
+  printf '#[fg=#181616,bg=%s] %s %s ' "$c" "$ram_icon" "$ram"
+fi

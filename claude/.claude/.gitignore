@@ -1,0 +1,21 @@
+# Secrets & credentials
+.credentials.json
+.env
+
+# Generated/cached
+.nojo-manifest.json
+stats-cache.json
+history.jsonl
+
+# Ephemeral directories
+debug/
+file-history/
+ide/
+plans/
+plugins/
+projects/
+session-env/
+shell-snapshots/
+statsig/
+telemetry/
+todos/

@@ -1,0 +1,8 @@
+# Machine-specific
+claude/.claude/settings.local.json
+claude/.claude/cache/
+claude/.claude/downloads/
+claude/.claude/paste-cache/
+
+# Secrets (should never be committed)
+gh/.config/gh/hosts.yml

@@ -1,0 +1,69 @@
+;; Kanata configuration for homerow mods
+;; Layout: QWERTY
+;; Modifier order (pinky to index): Shift-GUI-Alt-Ctrl (SGAC)
+;; Behavior: tap-hold-release
+;; Device: Laptop keyboard only (Lily58 unaffected)
+
+(defcfg
+  ;; Only apply to laptop keyboard, not external keyboards
+  linux-dev /dev/input/by-path/platform-i8042-serio-0-event-kbd
+  ;; Process keys not in defsrc (needed for tap-hold to work properly)
+  process-unmapped-keys yes
+  ;; Helps with multiple tap-holds activated near in time
+  concurrent-tap-hold yes
+)
+
+(defvar
+  ;; Timing variables - adjust these to your preference
+  ;; tap-timeout: time to register as tap when released quickly
+  tap-timeout 200
+  ;; hold-timeout: time before hold action activates
+  hold-timeout 200
+  ;; hold-timeout-slow: longer activation for most homerow mods
+  hold-timeout-slow 500
+)
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt rmet rctl
+)
+
+;; Home row mod aliases using tap-hold-release
+;; Left hand: A=Shift, S=GUI, D=Alt, F=Ctrl
+;; Right hand: J=Ctrl, K=Alt, L=GUI, ;=Shift
+(defalias
+  ;; Left hand home row
+  a (tap-hold-release $tap-timeout $hold-timeout-slow a lsft)
+  s (tap-hold-release $tap-timeout $hold-timeout-slow s lmet)
+  d (tap-hold-release $tap-timeout $hold-timeout-slow d lalt)
+  f (tap-hold-release $tap-timeout $hold-timeout f lctl)
+
+  ;; Right hand home row
+  j (tap-hold-release $tap-timeout $hold-timeout-slow j lctl)
+  k (tap-hold-release $tap-timeout $hold-timeout-slow k lalt)
+  l (tap-hold-release $tap-timeout $hold-timeout-slow l rmet)
+  ; (tap-hold-release $tap-timeout $hold-timeout-slow ; rsft)
+)
+
+(deflayer base
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  esc  @a   @s   @d   @f   g    h    @j   @k   @l   @;   '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            @nav rmet rctl
+)
+
+(defalias
+  nav (layer-toggle nav)
+)
+
+(deflayer nav
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    _    left down up   rght _    _    _
+  _    _    _    _    _    _    home pgdn pgup end  _    _
+  _    _    _              _              _    _    _
+)

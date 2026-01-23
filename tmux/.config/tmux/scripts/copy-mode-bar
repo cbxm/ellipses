@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Check if active pane is in copy mode
+in_mode=$(tmux display -p '#{pane_in_mode}')
+[ "$in_mode" != "1" ] && exit 0
+
+# Get terminal width and calculate bar size (60% of width)
+width=$(tmux display -p '#{client_width}')
+bar_width=$((width * 20 / 100))
+
+# Ensure minimum width for the text
+[ "$bar_width" -lt 20 ] && bar_width=20
+
+# Calculate padding on each side of "COPY MODE"
+text=" COPY MODE "
+text_len=${#text}
+padding=$(( (bar_width - text_len) / 2 ))
+[ "$padding" -lt 0 ] && padding=0
+
+# Build the padded bar
+pad=$(printf '%*s' "$padding" '')
+printf '#[fg=#181616,bg=#c4746e,bold]%s%s%s#[default]' "$pad" "$text" "$pad"

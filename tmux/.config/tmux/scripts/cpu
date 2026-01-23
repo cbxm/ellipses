@@ -1,0 +1,11 @@
+#!/bin/bash
+cpu=$(top -bn1 | awk '/Cpu/{print 100-$8}' | head -1)
+cpu=${cpu%.*}
+if [ "$cpu" -gt 80 ]; then
+  c='#c4746e'
+elif [ "$cpu" -gt 50 ]; then
+  c='#c4b28a'
+else
+  c='#8a9a7b'
+fi
+printf '#[fg=#181616,bg=%s] %s %s%% ' "$c" $'\uf0e7' "$cpu"

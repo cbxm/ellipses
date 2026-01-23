@@ -1,0 +1,70 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "plan",
+    "additionalDirectories": [
+      "/home/cbxm/.claude/profiles",
+      "/home/cbxm/.claude/skills"
+    ]
+  },
+  "model": "opus",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/nested-install-warning.js"
+          }
+        ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/context-usage-warning.js"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/notify-hook.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/slash-command-intercept.js"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/cbxm/.claude/nojo-statusline.sh",
+    "padding": 0
+  },
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "autoUpdatesChannel": "stable",
+  "minimumVersion": "2.1.3"
+}

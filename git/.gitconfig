@@ -1,11 +1,12 @@
+# Personal info (name, email) lives in ~/.gitconfig.local
+[include]
+	path = ~/.gitconfig.local
+
 [credential "https://github.com"]
-	helper = 
+	helper =
 	helper = !/usr/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
+	helper =
 	helper = !/usr/bin/gh auth git-credential
-[user]
-	name = Caden
-	email = cadenblox@gmail.com
 [core]
 	editor = nvim

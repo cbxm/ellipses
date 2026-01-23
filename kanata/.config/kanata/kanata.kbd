@@ -36,7 +36,7 @@
 ;; Right hand: J=Ctrl, K=Alt, L=GUI, ;=Shift
 (defalias
   ;; Left hand home row
-  a (tap-hold-release $tap-timeout $hold-timeout-slow a lsft)
+  a (tap-hold $tap-timeout 300 a lsft)
   s (tap-hold-release $tap-timeout $hold-timeout-slow s lmet)
   d (tap-hold-release $tap-timeout $hold-timeout-slow d lalt)
   f (tap-hold-release $tap-timeout $hold-timeout f lctl)

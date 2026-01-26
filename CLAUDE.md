@@ -50,6 +50,9 @@ stow -n -v fish
 - Machine-specific conditionals
 - Anything that affects multiple packages
 
+**Documentation:**
+Each package has a `docs.md` explaining config choices. Update when making changes — focus on "why" not "what".
+
 ## Secrets Policy
 
 **This is a public repo.** Never commit:

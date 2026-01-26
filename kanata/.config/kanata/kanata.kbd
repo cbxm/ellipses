@@ -44,7 +44,7 @@
   ;; Right hand home row
   j (tap-hold-release $tap-timeout $hold-timeout-slow j lctl)
   k (tap-hold-release $tap-timeout $hold-timeout-slow k lalt)
-  l (tap-hold-release $tap-timeout $hold-timeout-slow l rmet)
+  l (tap-hold $tap-timeout 250 l rmet)
   ; (tap-hold-release $tap-timeout $hold-timeout-slow ; rsft)
 )
 

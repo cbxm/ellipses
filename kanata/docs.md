@@ -20,10 +20,10 @@ Pinky to index. Matches Lily58 layout for muscle memory consistency. Ctrl on ind
 Resolves issues with rapid typing and held modifiers. F and J use faster 200ms activation (index fingers, most used). Outer fingers use 500ms to reduce accidental triggers.
 
 **A uses plain tap-hold at 300ms**
-The shift key is special — `tap-hold-release` caused issues with fast repeated A presses. Plain `tap-hold` with slightly longer timeout works better.
+`tap-hold` is less likely to trigger on rolling keypresses than `tap-hold-release`. A-Shift rarely used for capitals anyway — mainly for combo modifiers (Ctrl+Shift+X), so quick activation isn't needed.
 
 **L uses plain tap-hold at 250ms**
-GUI key needed faster activation than the 500ms default. Switched from `tap-hold-release` to `tap-hold` for snappier response.
+Same rationale as A — `tap-hold` reduces accidental activations from rolling. Slightly shorter timeout than A since GUI combos feel more latency-sensitive.
 
 **Caps Lock → Escape**
 Escape in home position. Standard vim ergonomics.

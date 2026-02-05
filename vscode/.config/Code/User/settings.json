@@ -70,5 +70,6 @@
     "vsicons.dontShowNewVersionMessage": true,
     "window.menuBarVisibility": "compact",
     "chat.disableAIFeatures": true,
-    "git.autofetch": true
+    "git.autofetch": true,
+    "claudeCode.preferredLocation": "panel"
 }

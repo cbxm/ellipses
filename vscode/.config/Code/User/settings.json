@@ -1,75 +1,75 @@
 {
-    "explorer.fileNesting.patterns": {
-        "*.ts": "${capture}.js",
-        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
-        "*.jsx": "${capture}.js",
-        "*.tsx": "${capture}.ts",
-        "tsconfig.json": "tsconfig.*.json",
-        "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
-        "*.sqlite": "${capture}.${extname}-*",
-        "*.db": "${capture}.${extname}-*",
-        "*.sqlite3": "${capture}.${extname}-*",
-        "*.db3": "${capture}.${extname}-*",
-        "*.sdb": "${capture}.${extname}-*",
-        "*.s3db": "${capture}.${extname}-*"
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js",
+    "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+    "*.jsx": "${capture}.js",
+    "*.tsx": "${capture}.ts",
+    "tsconfig.json": "tsconfig.*.json",
+    "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
+    "*.sqlite": "${capture}.${extname}-*",
+    "*.db": "${capture}.${extname}-*",
+    "*.sqlite3": "${capture}.${extname}-*",
+    "*.db3": "${capture}.${extname}-*",
+    "*.sdb": "${capture}.${extname}-*",
+    "*.s3db": "${capture}.${extname}-*"
+  },
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell"
     },
-    "terminal.integrated.profiles.windows": {
-        "PowerShell": {
-            "source": "PowerShell",
-            "icon": "terminal-powershell"
-        },
-        "Command Prompt": {
-            "path": [
-                "${env:windir}\\Sysnative\\cmd.exe",
-                "${env:windir}\\System32\\cmd.exe"
-            ],
-            "args": [],
-            "icon": "terminal-cmd"
-        },
-        "Git Bash": {
-            "source": "Git Bash"
-        },
-        "Ubuntu (WSL)": {
-            "path": "C:\\Windows\\System32\\wsl.exe",
-            "args": [
-                "-d",
-                "Ubuntu"
-            ]
-        }
+    "Command Prompt": {
+      "path": [
+        "${env:windir}\\Sysnative\\cmd.exe",
+        "${env:windir}\\System32\\cmd.exe"
+      ],
+      "args": [],
+      "icon": "terminal-cmd"
     },
-    "terminal.integrated.defaultProfile.windows": "Git Bash",
-    "terminal.integrated.fontFamily": "MesloLGS NF",
-    "editor.fontFamily": "MesloLGS NF",
-    "explorer.confirmDragAndDrop": false,
-    "git.confirmSync": false,
-    "files.autoSave": "onFocusChange",
-    "workbench.settings.applyToAllProfiles": [
-        "files.autoSave"
-    ],
-    "editor.rulers": [
-
-        90,
-        120
-    ],
-    "[markdown]": {
-        "editor.rulers": []
+    "Git Bash": {
+      "source": "Git Bash"
     },
-    "dev.containers.executeInWSL": true,
-    "go.alternateTools": {
-        "go": "/usr/local/go"
-    },
-    "cloudcode.project": "central-point-433709-q8",
-    "workbench.iconTheme": "vscode-icons",
-    "vite.autoStart": false,
-    "vite.browserType": "system",
-    "editor.minimap.enabled": false,
-    "settingsSync.ignoredExtensions": [
-        "saoudrizwan.claude-dev"
-    ],
-    "workbench.activityBar.location": "top",
-    "vsicons.dontShowNewVersionMessage": true,
-    "window.menuBarVisibility": "compact",
-    "chat.disableAIFeatures": true,
-    "git.autofetch": true,
-    "claudeCode.preferredLocation": "panel"
+    "Ubuntu (WSL)": {
+      "path": "C:\\Windows\\System32\\wsl.exe",
+      "args": [
+        "-d",
+        "Ubuntu"
+      ]
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.fontFamily": "MesloLGS NF",
+  "editor.fontFamily": "MesloLGS NF",
+  "explorer.confirmDragAndDrop": false,
+  "git.confirmSync": false,
+  "files.autoSave": "onFocusChange",
+  "workbench.settings.applyToAllProfiles": [
+    "files.autoSave"
+  ],
+  "editor.rulers": [
+    90,
+    120
+  ],
+  "[markdown]": {
+    "editor.rulers": []
+  },
+  "dev.containers.executeInWSL": true,
+  "go.alternateTools": {
+    "go": "/usr/local/go"
+  },
+  "cloudcode.project": "central-point-433709-q8",
+  "workbench.iconTheme": "vscode-icons",
+  "vite.autoStart": false,
+  "vite.browserType": "system",
+  "editor.minimap.enabled": false,
+  "settingsSync.ignoredExtensions": [
+    "saoudrizwan.claude-dev"
+  ],
+  "workbench.activityBar.location": "top",
+  "vsicons.dontShowNewVersionMessage": true,
+  "window.menuBarVisibility": "compact",
+  "chat.disableAIFeatures": true,
+  "git.autofetch": true,
+  "claudeCode.preferredLocation": "panel",
+  "workbench.colorCustomizations": null
 }

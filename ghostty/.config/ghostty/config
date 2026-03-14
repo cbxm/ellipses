@@ -48,10 +48,8 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 theme = Kanagawa Dragon
-font-family = NotoSansM Nerd Font
-font-size = 10.5
-font-feature = calt
-font-feature = liga
+font-family = Maple Mono
+font-size = 10
 adjust-icon-height = 50%
 
 keybind = shift+enter=text:\x1b\r

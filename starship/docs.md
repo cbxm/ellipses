@@ -5,12 +5,12 @@ Path: @/starship
 ### What This Configures
 
 - **Starship** — cross-shell prompt
-- Module format overrides (strips version numbers)
+- Disables all language/tool detection modules
 
 ### Key Choices
 
-**Hide version numbers**
-All language modules use `format = 'via [$symbol]($style)'` — shows icon only, no version string. Keeps prompt compact.
+**Disable language modules**
+All language and package modules set `disabled = true`. No icons, no versions — prompt stays clean regardless of project context.
 
 **Default everything else**
 Starship's defaults are sensible. Only override what's noisy.

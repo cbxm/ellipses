@@ -36,13 +36,13 @@ Code review requires technical evaluation, not emotional performance.
 **Determine PR number from context:**
 
 - User mentions PR number: Use that
-- Current branch: Run `gh pr view --json number -q .number`
+- Current branch: Auto-detected by the script
 
 **Fetch all comments:**
 
 ```bash
-# View all comments (review + general)
-gh pr view [PR-NUMBER] --comments
+# Fetches inline review comments, review summaries, and conversation comments
+bash ~/.claude/skills/gh-review-comments/scripts/get-review-comments.sh [PR-NUMBER]
 ```
 
 **Read completely before reacting.**
@@ -133,7 +133,7 @@ Which would you like?"
 ## Quick Reference Checklist
 
 - [ ] Create TodoWrite for all feedback items
-- [ ] Fetch PR comments (`gh pr view --comments`)
+- [ ] Fetch PR comments (`bash ~/.claude/skills/gh-review-comments/scripts/get-review-comments.sh`)
 - [ ] Clarify ALL unclear items before implementing ANY
 - [ ] Implement in order: blocking → simple → complex
 - [ ] Test each fix individually

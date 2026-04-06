@@ -10,8 +10,8 @@ Path: @/ghostty
 
 ### Key Choices
 
-**Kanagawa Dragon theme**
-Built-in theme, matches fish/tmux/nvim colors.
+**Kanagawa Dragon / Gruvbox Light themes**
+Dark: Kanagawa Dragon (matches fish/tmux/nvim colors). Light: Flexoki Light. Ghostty auto-switches based on GNOME color-scheme preference. Toggle via Settings > Appearance or `gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'`.
 
 **NotoSansM Nerd Font at 10.5pt**
 Good readability on laptop display. Nerd Font variant for icons in starship/nvim.

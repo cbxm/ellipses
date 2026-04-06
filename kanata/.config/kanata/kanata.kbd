@@ -38,7 +38,7 @@
   ;; Left hand home row
   a (tap-hold $tap-timeout 300 a lsft)
   s (tap-hold-release $tap-timeout $hold-timeout-slow s lmet)
-  d (tap-hold-release $tap-timeout $hold-timeout-slow d lalt)
+  d (tap-hold-release $tap-timeout $hold-timeout d lalt)
   f (tap-hold-release $tap-timeout $hold-timeout f lctl)
 
   ;; Right hand home row

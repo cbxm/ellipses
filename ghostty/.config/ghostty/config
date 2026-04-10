@@ -72,4 +72,4 @@ gtk-titlebar = true
 gtk-toolbar-style = flat
 gtk-custom-css = /home/cbxm/.config/ghostty/custom.css
 gtk-tabs-location = hidden
-command = tmux new -A -s main
+command = tmux new -A -s 0main

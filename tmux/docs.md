@@ -32,7 +32,7 @@ Default is 5 lines per wheel tick — too fast. Changed to 1 line for precision.
 Doesn't auto-copy on mouse release. Must explicitly yank with `y` or Enter.
 
 **Popup terminal**
-`prefix + p` toggles a floating popup session. Quick scratchpad without disrupting layout.
+`prefix + p` toggles a floating `1popup` session (leading `1` keeps it sorted with other numbered sessions; status bar strips the digit). Quick scratchpad without disrupting layout.
 
 **Pane borders at top**
 `pane-border-status top` with empty format — shows thick line only, no text. Border turns red in copy mode.

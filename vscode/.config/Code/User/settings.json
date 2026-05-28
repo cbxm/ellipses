@@ -71,5 +71,6 @@
   "chat.disableAIFeatures": true,
   "git.autofetch": true,
   "claudeCode.preferredLocation": "panel",
-  "workbench.colorCustomizations": null
+  "workbench.colorCustomizations": null,
+  "workbench.colorTheme": "Dark Modern"
 }

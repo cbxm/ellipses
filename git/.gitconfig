@@ -10,3 +10,5 @@
 	helper = !/usr/bin/gh auth git-credential
 [core]
 	editor = nvim
+[init]
+	defaultBranch = main

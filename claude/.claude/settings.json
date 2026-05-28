@@ -5,13 +5,36 @@
   },
   "includeCoAuthoredBy": false,
   "permissions": {
-    "allow": [],
+    "allow": [
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(ts-node:*)",
+      "Bash(node --loader ts-node/esm:*)",
+      "Bash(npm run start)",
+      "Bash(npm run worker:*)",
+      "WebFetch(domain:docs.meevoapi.com)",
+      "Bash(git worktree:*)",
+      "Bash(npm view:*)",
+      "Bash(npm start)",
+      "Bash(npm run dev:*)",
+      "Bash(npm test:*)",
+      "mcp__context7__get-library-docs",
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "WebFetch(domain:support.telnyx.com)",
+      "Bash(gh issue view:*)",
+      "Bash(gh api:*)",
+      "Bash(git ls-tree:*)"
+    ],
     "deny": [],
     "ask": [],
     "defaultMode": "plan",
     "additionalDirectories": [
       "/home/cbxm/.claude/profiles",
-      "/home/cbxm/.claude/skills"
+      "/home/cbxm/.claude/skills",
+      "/home/cbxm/src/cassie/.claude/profiles",
+      "/home/cbxm/src/cassie/.claude/skills"
     ]
   },
   "model": "opus[1m]",
@@ -65,12 +88,18 @@
     "padding": 0
   },
   "enabledPlugins": {
-    "playwright@claude-plugins-official": true,
+    "playwright@claude-plugins-official": false,
     "typescript-lsp@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
   "autoUpdatesChannel": "latest",
-  "voiceEnabled": true,
-  "skipDangerousModePermissionPrompt": true
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true,
+  "verbose": true,
+  "terminalProgressBarEnabled": false,
+  "teammateMode": "auto",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true
 }

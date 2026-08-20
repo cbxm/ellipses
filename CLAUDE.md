@@ -6,7 +6,7 @@ Stow-based dotfiles for Caden's machines.
 
 ```bash
 # Apply all packages
-cd ~/ellipses && stow fish ghostty tmux starship bash nvim lazygit git kanata gh vscode claude
+cd ~/ellipses && stow fish ghostty tmux starship bash nvim lazygit git kanata gh vscode claude wireplumber
 
 # Apply single package
 stow fish
@@ -34,6 +34,7 @@ stow -n -v fish
 | `gh` | GitHub CLI | config.yml only (tokens stay local) |
 | `vscode` | VS Code | settings.json, snippets/ |
 | `claude` | Claude Code | CLAUDE.md, settings, skills, commands, hooks |
+| `wireplumber` | PipeWire session manager | BT output-only (no HFP), device priorities |
 
 ## Working With Claude
 

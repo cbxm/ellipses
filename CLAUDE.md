@@ -77,9 +77,20 @@ Each package has a `docs.md` explaining config choices. Update when making chang
 
 1. Create package directory: `mkdir -p ~/ellipses/newpkg/.config/newpkg`
 2. Move config: `mv ~/.config/newpkg/config.file ~/ellipses/newpkg/.config/newpkg/`
-3. Stow it: `cd ~/ellipses && stow newpkg`
-4. Verify symlink: `ls -la ~/.config/newpkg`
-5. Add to this table above
+3. **Copy the ignore file: `cp fish/.stow-local-ignore newpkg/`** — required, see below
+4. Stow it: `cd ~/ellipses && stow newpkg`
+5. Verify symlink: `ls -la ~/.config/newpkg`
+6. Write `newpkg/docs.md` explaining *why* the config is the way it is
+7. Add to the table above and to the Quick Reference `stow` line
+
+**Do not skip step 3.** Every package has a root `docs.md`, and without
+`.stow-local-ignore` stow treats it as a `$HOME` target: the first package stowed wins and
+leaves a stray `~/docs.md`, and every package after that fails to stow, conflicting on it.
+
+Two things about that file are easy to get wrong. It must live in the *package* directory —
+one at the repo root is not read. And stow *replaces* its built-in ignore list once the file
+exists rather than extending it, so the defaults have to be repeated verbatim; just copy an
+existing one rather than writing a fresh one.
 
 ## Machine-Specific Configs
 

@@ -1,0 +1,31 @@
+# Stow's built-in ignore list is REPLACED (not extended) once this file exists,
+# so the standard entries are repeated here before our own additions.
+
+RCS
+.+,v
+
+CVS
+\.\#.+
+\.cvsignore
+
+\.svn
+_darcs
+\.hg
+
+\.git
+\.gitignore
+\.gitmodules
+
+.+~
+\#.*\#
+
+^/README.*
+^/LICENSE.*
+^/COPYING
+
+# --- ellipses additions ---
+# Per-package documentation. Lives inside each package dir purely for locality;
+# it is repo material, not config, and must never be linked into $HOME.
+# Without this, `stow <pkg>` creates ~/docs.md pointing at whichever package
+# was stowed first, and every subsequent package then conflicts on it.
+^/docs\.md

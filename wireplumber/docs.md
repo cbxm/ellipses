@@ -73,3 +73,41 @@ pw-cli info <node.name> | grep priority.session   # confirm a rule actually appl
 pactl list short sources | grep bluez             # headset mic present?
 pactl list cards | grep 'Active Profile'          # should be a2dp-sink when not on a call
 ```
+
+## Troubleshooting
+
+### Playback is pitched down / plays slow
+
+The A2DP transport and the node disagree on sample rate. This shows up after restarting
+WirePlumber **while audio is playing** — the transport keeps a stale format while the node
+comes back at a different rate. Renegotiate by bouncing the profile:
+
+```bash
+pactl set-card-profile bluez_card.<MAC_WITH_UNDERSCORES> off && sleep 1 && \
+pactl set-card-profile bluez_card.<MAC_WITH_UNDERSCORES> a2dp-sink
+```
+
+Cheapest avoidance: pause audio before `systemctl --user restart wireplumber`.
+
+### A connected device won't become the default
+
+Priorities in `50-default-priorities.conf` only break ties between candidates. A pinned
+default in `~/.local/state/wireplumber/default-nodes` beats them outright:
+
+```
+default.configured.audio.sink=...      # the active pin
+default.configured.audio.sink.0=...    # fallback list, in order
+```
+
+Those pins accumulate silently — every manual pick in the sound settings writes one, and the
+fallback list keeps entries for hardware that no longer exists. To hand control back to
+priority, delete the pin rather than editing the file (WirePlumber holds it in memory and
+rewrites it on exit):
+
+```bash
+pw-metadata -n default -d 0 default.configured.audio.sink
+pw-metadata -n default -d 0 default.configured.audio.source
+```
+
+Both were cleared on 2026-08-21; the file is empty and selection is purely priority-driven.
+Re-pin only if you want a device to win *regardless* of priority.

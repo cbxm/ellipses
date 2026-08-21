@@ -4,54 +4,72 @@ WirePlumber session-manager overrides for PipeWire. Drop-ins in `wireplumber.con
 layer on top of `/usr/share/wireplumber/wireplumber.conf` — never edit that file directly,
 it is package-owned and overwritten on upgrade.
 
-## disable-hfp.conf
+Apply changes with `systemctl --user restart wireplumber` (this cuts audio briefly).
 
-Bluetooth headsets are **output-only on purpose**.
+## bluetooth-audio.conf
 
-```
-bluez5.roles = [ a2dp_sink, a2dp_source ]
-bluez5.hfphsp-backend = "none"
-```
+Bluetooth headsets run **full duplex**: stereo A2DP for playback, HFP for the mic.
 
-Restricting the roles and killing the HFP/HSP backend means the headset profile is never
-offered at all — `pactl list cards` shows only `off` / `a2dp-sink` / `a2dp-sink-sbc_xq`, and
-no bluez source ever appears.
+This file previously did the opposite — it stripped `bluez5.roles` down to A2DP and set
+`hfphsp-backend = "none"` so a mic could never be offered, deliberately, to stop apps
+dragging the headset out of stereo. That was reversed on 2026-08-21 when the earbuds became
+the primary call device.
 
-**Why:** the headset (HFP/HSP) profile is mono and heavily compressed. The moment any app
-opens a mic, WirePlumber would otherwise drag the headset out of A2DP into that profile and
-music quality collapses. Mic duty belongs to the Focusrite 2i2 or the internal array; the
-earbuds are speakers and nothing else.
+**The tradeoff that motivated the old lockout still exists**, it is just scoped now. HFP is
+mono and much worse than A2DP; `bluez5.enable-msbc` keeps it wideband (16 kHz) rather than
+telephone-grade (8 kHz), but it is still audibly a step down.
 
-`bluetooth.autoswitch-to-headset-profile = false` is belt-and-braces — with the backend
-already `none` there is nothing to switch to, but the setting documents the intent.
+The switch is narrower than it looks. `device/autoswitch-bluetooth-profile.lua`
+(`checkStreamStatus`) resolves a capture stream's *peer* and only switches profile if that
+peer is the headset's loopback source. Capture from the Focusrite or the internal array and
+the headset stays in A2DP — merely having a mic open somewhere does not trigger it.
 
-Note `a2dp_source` is still listed: that role lets *this machine* receive audio from a phone.
-It is unrelated to the mic question and harmless to keep.
+Practical consequence: because the headset mic outranks the internal array, **with the
+Focusrite unplugged the earbuds become the default mic and calls will drop to HFP.** Keep
+the 2i2 connected to stay in stereo, or set
+`bluetooth.autoswitch-to-headset-profile = false` to never switch.
+
+Role names are from our side: `hfp_ag`/`hsp_ag` mean this machine is the Audio Gateway and
+the headset is the hands-free unit. `hfp_hf`/`hsp_hf` are the reverse, for connecting to a
+phone. Both are listed so either direction works.
 
 ## 50-default-priorities.conf
 
 Sets `priority.session` so the right device wins automatically instead of needing a manual
 pick after every reconnect.
 
-Outputs, highest first: HDMI (1500) → internal analog (1000) → Focusrite (100).
-Inputs, highest first: Focusrite (2500) → internal analog (2000) → StreamCam (500).
-The StreamCam mic is deliberately last; it exists only so the camera does not silently
-become the default mic when plugged in.
+| | Order (highest first) |
+|---|---|
+| Outputs | bluetooth 2000 → Focusrite 1500 → HDMI 1200 → internal 1000 |
+| Inputs | Focusrite 2500 → bluetooth 2010 → internal 1500 → StreamCam 500 |
 
-Bluetooth sinks are pinned at 2000 so connected earbuds outrank the built-in speakers.
+The StreamCam mic is deliberately last so the webcam never silently becomes the default mic.
 
-**Gotcha worth knowing:** priority only decides between *candidates*. A user-pinned default
-stored as `default.configured.audio.sink` in `~/.local/state/wireplumber/default-nodes`
-overrides priority entirely. If a device that is connected still refuses to become the
-output, that state file — not this config — is the thing to inspect. Repoint it with
-`wpctl set-default <id>`, never by hand-editing; WirePlumber holds the state in memory and
-rewrites the file on exit.
+**Bluetooth sinks are matched by pattern, not MAC.** Per-device rules were a trap: every new
+pair of earbuds silently landed at the default 1010 and lost to HDMI at 1500 until someone
+noticed. Note the syntax — a leading `~` makes the value a regular expression. A plain glob
+like `bluez_output.*` matches nothing here and fails silently.
 
-## Applying changes
+**There is deliberately no rule for bluetooth sources.** The headset mic is exposed as a
+loopback node created with `LocalModule` (`scripts/monitors/bluez.lua:130`), which never
+passes through `monitor.bluez.rules` — a rule there is dead config. Its priority is
+hardcoded to 2010 (same file, `:283`). That already sits between the Focusrite and the
+internal array, so instead of fighting it the internal array is lowered to 1500 to keep a
+comfortable gap.
+
+### Gotcha: priority only breaks ties
+
+A user-pinned default stored as `default.configured.audio.sink` in
+`~/.local/state/wireplumber/default-nodes` **overrides priority entirely**. If a connected
+device still refuses to become the output, that state file is the thing to inspect — not
+this config. Repoint it with `wpctl set-default <id>`; never hand-edit it, as WirePlumber
+holds the state in memory and rewrites the file on exit.
+
+## Verifying
 
 ```bash
-systemctl --user restart wireplumber
+pactl get-default-sink
+pw-cli info <node.name> | grep priority.session   # confirm a rule actually applied
+pactl list short sources | grep bluez             # headset mic present?
+pactl list cards | grep 'Active Profile'          # should be a2dp-sink when not on a call
 ```
-
-Verify: `pactl list short sinks`, `pactl get-default-sink`, and for the HFP lockout
-`pactl list short sources | grep bluez` should return nothing.

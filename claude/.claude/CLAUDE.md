@@ -2,6 +2,8 @@
 
 - When encountering the error `File has been unexpectedly modified. Read it again before attempting to write it.` try using relative file paths, instead of absolute. If the issue persists, pause and ask the user for help resolving the issue.
 
+- My primary claude invocation is the fish alias `ccyo` = `claude --dangerously-skip-permissions`. When spawning nested `claude` sessions (tmux, `sh -c`), pass `--dangerously-skip-permissions` explicitly — the alias won't resolve there.
+
 ## git / GitHub
 
 - Your primary method for interacting with GitHub should be the GitHub CLI.

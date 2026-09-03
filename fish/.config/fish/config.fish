@@ -76,16 +76,18 @@ set -g fish_pager_color_completion c5c9c5
 set -g fish_pager_color_description 625e5a
 set -g fish_pager_color_selected_background --background=2d4f67
 
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+if test -x /home/linuxbrew/.linuxbrew/bin/brew
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+end
 
 # fnm (Node version manager) - auto-switches on .nvmrc
-fnm env --use-on-cd --shell fish | source
+command -q fnm; and fnm env --use-on-cd --shell fish | source
 
 # Starship prompt
-starship init fish | source
+command -q starship; and starship init fish | source
 
 # Zoxide (smarter cd)
-zoxide init fish | source
+command -q zoxide; and zoxide init fish | source
 
 # bun
 set --export BUN_INSTALL "$HOME/.bun"

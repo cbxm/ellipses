@@ -37,7 +37,7 @@
       "/home/cbxm/src/cassie/.claude/skills"
     ]
   },
-  "model": "opus[1m]",
+  "model": "claude-fable-5-1[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -96,10 +96,11 @@
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "verbose": true,
+  "verbose": false,
   "terminalProgressBarEnabled": false,
   "teammateMode": "auto",
   "remoteControlAtStartup": true,
+  "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
   "voiceEnabled": true
 }

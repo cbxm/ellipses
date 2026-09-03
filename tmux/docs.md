@@ -39,7 +39,8 @@ Doesn't auto-copy on mouse release. Must explicitly yank with `y` or Enter.
 
 ### Workarounds & Gotchas
 
-*(none yet)*
+**`@resurrect-never-overwrite on` — do not remove**
+Without it, resurrect's "restore from scratch" mode (used on a fresh server, i.e. every reboot) finishes with `tmux kill-session -t 0` to remove the throwaway session a bare `tmux` creates. No session is named exactly `0`, so tmux falls back to prefix matching and `-t 0` resolves to `0main` — the session Ghostty is attached to. Ghostty's `tmux new -A -s 0main` command exits and the window closes right after "Restoring...". The option skips from-scratch mode entirely; the pre-existing `0main` pane is kept as-is (fresh fish in `~`, same as what was saved) and every other session restores normally.
 
 ### See Also
 

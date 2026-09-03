@@ -17,7 +17,7 @@ Dark: Kanagawa Dragon (matches fish/tmux/nvim colors). Light: Flexoki Light. Gho
 Good readability on laptop display. Nerd Font variant for icons in starship/nvim.
 
 **Auto-launch tmux**
-`command = tmux new -A -s 0main` — ghostty becomes a thin wrapper around tmux. Attaches to existing session or creates new one. Leading `0` keeps it sorted with other numbered sessions; status bar strips the digit.
+`command = tmux new -A -s 0main` — ghostty becomes a thin wrapper around tmux. Attaches to existing session or creates new one. Leading `0` keeps it sorted with other numbered sessions; status bar strips the digit. That leading `0` is why tmux sets `@resurrect-never-overwrite` — see the gotcha in `tmux/docs.md`.
 
 **Tabs hidden**
 `gtk-tabs-location = hidden` — tmux handles windowing, ghostty tabs are redundant.

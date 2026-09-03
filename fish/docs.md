@@ -40,7 +40,7 @@ Deliberately out of scope: npm globals per fnm node version, tmux/nvim plugins, 
 ### Workarounds & Gotchas
 
 **`sysup` cargo step needs the `cargo-update` crate**
-Plain cargo has no "upgrade all installed binaries". If `cargo-install-update` isn't on PATH the step prints a hint instead of running. Not installed on Carina as of 2026-09.
+Plain cargo has no "upgrade all installed binaries". If `cargo-install-update` isn't on PATH the step prints a hint instead of running. Building it needs `libssl-dev` (the `openssl-sys` crate fails with "Could not find directory of OpenSSL installation" without it): `sai libssl-dev && cargo install cargo-update`.
 
 **`sysup` MANUAL debs are still manual**
 The reminder only names them (obsidian, openlogi, speedtest at time of writing). Re-downloading the `.deb` and `sai`-ing it is on you; nothing tracks upstream versions. Ghostty used to be on this list; it moved to a PPA (see `ghostty/docs.md`).

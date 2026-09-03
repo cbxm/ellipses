@@ -72,5 +72,6 @@
   "git.autofetch": true,
   "claudeCode.preferredLocation": "panel",
   "workbench.colorCustomizations": null,
-  "workbench.colorTheme": "Dark Modern"
+  "workbench.colorTheme": "Dark Modern",
+  "update.showReleaseNotes": false
 }

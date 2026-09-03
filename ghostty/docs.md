@@ -31,6 +31,13 @@ Good readability on laptop display. Nerd Font variant for icons in starship/nvim
 **Focus follows mouse**
 Splits activate on hover, no click required.
 
+**Installed from the mkasberg PPA, not a downloaded `.deb`**
+Upstream ships no Linux packages. Newer Ubuntu releases carry Ghostty in the archive, but noble (Pop!_OS 24.04's base) does not, so `ghostty-ubuntu` (mkasberg) is the source here. Carina originally ran a hand-downloaded `.deb` from its GitHub releases, which apt never upgraded because no repo stood behind it (it showed up in `sysup`'s MANUAL list). The project now publishes a Launchpad PPA as its recommended install path, so as of 2026-09 Carina uses that instead and `apt upgrade` (hence `sysup`) keeps Ghostty current. Pop!_OS 24.04 is noble-based, so the noble build applies. New machine setup:
+
+```
+sudo add-apt-repository ppa:mkasberg/ghostty-ubuntu && sudo apt install ghostty
+```
+
 ### Workarounds & Gotchas
 
 *(none yet)*

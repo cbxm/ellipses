@@ -130,6 +130,9 @@ Edit `ghostty/.config/ghostty/config` for terminal, or fish config for shell col
 **Add nvim plugin:**
 Edit `nvim/.config/nvim/lua/plugins/` (depends on plugin manager setup).
 
+**Update the system:**
+`sysup` (add `-n` to preview, `-y` for unattended). Covers apt, flatpak, brew, uv, bun, cargo, gh extensions, fwupd report. See `fish/docs.md`.
+
 ## Foundational Decisions
 
 **Why stow?**

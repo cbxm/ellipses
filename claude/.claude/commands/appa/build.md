@@ -14,9 +14,9 @@ Kick off implementation of a plan without leaving the conversation.
 
 2. **Derive a branch name** from the plan's goal (`feat/…`, `fix/…`, `chore/…`).
 
-3. **Dispatch the builder** in the background with `name` set to something memorable (the branch name is fine). Brief:
+3. **Dispatch the builder** in the background with `isolation: "worktree"` (always; this is what keeps it off the main checkout) and `name` set to something memorable (the branch name is fine). Brief:
    - the plan path, and the instruction to read it fully first
-   - the branch name and the instruction to work in a worktree: use the repo's `worktree-setup` agent if `.claude/agents/worktree-setup.md` exists, else the `worktree` skill
+   - the branch name, with: "you already have a worktree; rename its branch with `git branch -m`, run the repo's setup script in place, and do not spawn `worktree-setup`"
    - "commit as you go; do not push; report when done"
    - Without `--fork`: `subagent_type: builder` (Opus, fresh). With `--fork`: `subagent_type: fork`, same brief, and tell it to act as the builder agent would.
 
@@ -26,5 +26,6 @@ Kick off implementation of a plan without leaving the conversation.
 
 **Key requirements:**
 - One builder per plan. Follow-ups and review findings go to the SAME builder via SendMessage; never start a second builder on the same branch.
-- Never dispatch onto `main`. The builder must be in a worktree before it edits anything.
+- Never dispatch onto `main`. `isolation: "worktree"` is what guarantees that; a builder that spawns `worktree-setup` on top of it creates a second, stray worktree.
+- Stopping a builder does not stop the `test-runner` agents it spawned. After a TaskStop, check `ListAgents` and stop the children too.
 - Do not block waiting for the builder.

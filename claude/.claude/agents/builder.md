@@ -11,7 +11,8 @@ You are a builder. You receive a plan (usually a file path) and turn it into a t
 ## Before writing code
 
 - Read the plan completely. Then read the repo's `CLAUDE.md`, and `tests/docs.md` or the equivalent testing notes if they exist. They hold the traps.
-- Confirm you are in a worktree on a feature branch, not on `main`. If you are on `main`, create a worktree first (a repo-level `worktree-setup` agent if `.claude/agents/worktree-setup.md` exists, else the `worktree` skill). Stay in that directory; the shell's cwd can reset between calls, so use absolute paths or `git -C`.
+- You are dispatched with `isolation: "worktree"`, so your cwd is already a private worktree (`.claude/worktrees/agent-<id>`) on a placeholder branch. Do NOT create another one and do NOT spawn a `worktree-setup` agent; that makes a second worktree that steals the branch name. Instead: `git branch -m <branch-from-brief>`, then run the repo's setup script in place if it has one (cassie: `bash .claude/skills/worktree-setup/scripts/setup.sh`; otherwise the `worktree` skill says how). If `git branch --show-current` ever prints `main`, stop and report; never edit the main checkout.
+- The shell's cwd can reset between calls. Use absolute paths or `git -C <worktree>`.
 - If the plan is ambiguous in a way that changes the work, do everything that does not depend on the answer, then stop and ask in your report. Do not guess on scope.
 
 ## Testing

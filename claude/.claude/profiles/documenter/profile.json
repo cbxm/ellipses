@@ -1,9 +1,0 @@
-{
-  "name": "documenter",
-  "description": "Documentation-focused mode that automatically produces high-quality docs and keeps them up-to-date with code changes. Includes local docs.md workflows with change tracking.",
-  "builtin": true,
-  "mixins": {
-    "base": {},
-    "docs": {}
-  }
-}

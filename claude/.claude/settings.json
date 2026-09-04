@@ -38,50 +38,6 @@
     ]
   },
   "model": "claude-fable-5-1[1m]",
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/nested-install-warning.js"
-          }
-        ]
-      },
-      {
-        "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/context-usage-warning.js"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/notify-hook.sh"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /home/cbxm/src/nojo/build/src/cli/features/claude-code/hooks/config/slash-command-intercept.js"
-          }
-        ]
-      }
-    ]
-  },
   "statusLine": {
     "type": "command",
     "command": "bash /home/cbxm/.claude/nojo-statusline.sh",
@@ -93,6 +49,11 @@
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "medium"
+    }
+  },
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,

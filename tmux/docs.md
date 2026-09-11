@@ -10,11 +10,11 @@ Path: @/tmux
 
 ### Key Choices
 
-**Ctrl-A prefix**
-`C-a` is closer than `C-b`. Matches GNU screen muscle memory.
+**M-a prefix**
+`M-a`, with `M-;` as prefix2. Part of moving the whole config off `C-` chords onto `M-` ones so tmux lines up with Obsidian's keybinds; kanata's home-row Alt (hold `D`) is what makes an Alt prefix comfortable, and its hold timeout was dropped to 200ms in the same change to keep the chord fast.
 
 **Vim-style navigation**
-`h/j/k/l` for pane selection, `H/J/K/L` for resizing. `C-h/j/k/l` are repeatable (`-r` flag).
+`h/j/k/l` for pane selection, `H/J/K/L` for resizing. `M-h/j/k/l` are repeatable (`-r` flag).
 
 **Pane cycling that keeps zoom: o/O, M-o/M-O**
 Default `prefix + o` unzooms the window when it switches panes, so there is no way to page through panes one at a time at full size. `select-pane -Z` (tmux 3.1+) re-applies zoom to the pane it lands on, so `o` walks forward and `O` back without ever showing the layout. `M-o`/`M-O` are the repeatable (`-r`) variants for holding the prefix and tapping to scan, following the same plain-key/`M-` split as the rest of the file. The plain keys must *not* be `-r`: repeat keeps the prefix table live for `repeat-time` afterwards, so the first keystroke typed into the pane you just landed on gets swallowed if it happens to be bound there with `-r` — a bare `o` would cycle again instead of opening a line in vim, and `H` would resize and drop the zoom. (Non-`-r` bindings are safe: matching one ends the repeat and the key reaches the pane.) `M-o`/`M-O` shadow the default `rotate-window -D`/`-U`, which is a trade worth making here; `C-o` still rotates forward. `h/j/k/l` deliberately keep the default unzoom behaviour — directional moves only make sense once the layout is visible.

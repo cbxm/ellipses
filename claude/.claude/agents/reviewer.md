@@ -2,8 +2,8 @@
 name: reviewer
 description: Cold review of a diff or branch. Reports ranked findings with a concrete failure scenario for each. Never edits. Use before opening a PR/MR, or when a change needs a second pair of eyes.
 tools: "*"
-model: claude-opus-5-5
-effort: max
+model: claude-fable-5-1
+effort: high
 color: red
 permissionMode: bypassPermissions
 ---

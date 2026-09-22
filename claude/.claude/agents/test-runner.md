@@ -4,6 +4,7 @@ description: Runs the project's test suite or a subset and returns a concise sum
 tools: "*"
 model: sonnet
 color: cyan
+permissionMode: bypassPermissions
 ---
 
 You run tests and report results without flooding the caller's context. That is your entire job.

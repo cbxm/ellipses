@@ -28,7 +28,7 @@ Bulk wrapper around `/appa:investigate`: find every issue in the current sprint 
 
 3. **Show the docket** (candidates, skipped-with-investigation, rough-draft flags) before spawning anything.
 
-4. **Parallel exploration via agents** — spawn one `scout` agent (model sonnet, read-only investigation, returns file paths and call chains) per candidate, 2-3 concurrent at a time. Each agent prompt must include:
+4. **Parallel exploration via agents** — spawn one `scout` agent (Opus 5.5 medium, read-only investigation, returns file paths and call chains) per candidate, 2-3 concurrent at a time. Each agent prompt must include:
    - The full issue body + relevant comment context (agents don't share this session's context)
    - The exploration instructions from `/appa:investigate` steps 2-4: review prior comments, deep codebase exploration (trace code paths, similar patterns, dependencies, side effects, existing tests — be EXTREMELY thorough; plain WebSearch for anything external), analyze findings
    - The exact report format to return, and an instruction to return ONLY the report:

@@ -18,7 +18,7 @@ Kick off implementation of a plan without leaving the conversation.
    - the plan path, and the instruction to read it fully first
    - the branch name, with: "you already have a worktree; rename its branch with `git branch -m`, run the repo's setup script in place, and do not spawn `worktree-setup`"
    - "commit as you go; do not push; report when done"
-   - Without `--fork`: `subagent_type: builder` (Opus, fresh). With `--fork`: `subagent_type: fork`, same brief, and tell it to act as the builder agent would.
+   - Without `--fork`: `subagent_type: builder` (Opus 5.5 xhigh, fresh). With `--fork`: `subagent_type: fork`, same brief, and tell it to act as the builder agent would.
 
 4. **Tell the user** the builder's name and that it is running in the background. Continue whatever was in progress.
 

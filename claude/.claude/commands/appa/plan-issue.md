@@ -30,7 +30,7 @@ Comprehensive planning session after `/appa:work-issue`. Use extended thinking, 
    - What assumptions need validation?
    - What could go wrong?
 
-4. **Deep codebase exploration** (the `scout` agent — model sonnet, read-only, returns file paths and call chains — is the right tool for the fan-out)
+4. **Deep codebase exploration** (the `scout` agent — Opus 5.5 medium, read-only, returns file paths and call chains — is the right tool for the fan-out)
    - Trace all relevant code paths
    - Find existing patterns to follow
    - Identify all files that need modification

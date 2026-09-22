@@ -24,7 +24,7 @@ Thoroughly investigate an issue, explore the codebase, and propose a technical a
    - Note any context, decisions, or constraints mentioned
    - Avoid duplicating existing research
 
-3. **Deep codebase exploration** (delegate to the `scout` agent — model sonnet, read-only, returns file paths and call chains; use plain WebSearch for anything external)
+3. **Deep codebase exploration** (delegate to the `scout` agent — Opus 5.5 medium, read-only, returns file paths and call chains; use plain WebSearch for anything external)
    - Search for keywords from issue title/body
    - Trace code paths related to the objective
    - Find similar patterns/implementations

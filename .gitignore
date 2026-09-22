@@ -6,3 +6,7 @@ claude/.claude/paste-cache/
 
 # Secrets (should never be committed)
 gh/.config/gh/hosts.yml
+
+# Claude Code harness state
+.claude/worktrees/
+claude/.claude/skills/synced/

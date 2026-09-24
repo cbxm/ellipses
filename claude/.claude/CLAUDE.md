@@ -43,6 +43,7 @@ No changes to production data. No changes to `main`. No changes to third-party A
 - YAGNI. Build what was asked.
 - Comments document the code, not the process.
 - Prefer a library over rolling your own; ask before installing.
+- Test critical flows only: the repo's Testing section, else paths where a silent regression costs money, bookings, or data. Nothing for UI rendering, copy, helpers, or tooling.
 - Tests verify behavior, never mocks. No test-only methods on production classes.
 - Root-cause bugs. Never patch the symptom, never a workaround. If the cause cannot be found, stop and write up what was learned.
 - Fix every failing test, including ones you did not break.

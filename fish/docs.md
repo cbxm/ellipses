@@ -37,6 +37,13 @@ Smarter directory jumping. `z project` beats `cd ~/src/some/deep/path/project`.
 
 Deliberately out of scope: npm globals per fnm node version, tmux/nvim plugins, docker image pulls, `pop-upgrade`. Either not "safe" to run blind or not worth the surface area yet.
 
+**`conserve`: battery conservation mode toggle**
+`functions/conserve.fish`. Carina's EC drops any non-Lenovo USB-C PD charger 5–21 min after the battery finishes charging to 100%, then runs on battery until the cable is replugged. Tested 2026-09-23: nothing on the host brings the charger back, including unloading `ucsi_acpi`. Conservation mode caps the battery at ~80%, and at that cap the charger stays connected, both when sitting above the cap and when charging up to it and stopping. So conservation mode stays on day to day, and `conserve` turns it off before a trip that needs 100%.
+
+- It writes `charge_types` (`Long_Life` / `Fast`) rather than the legacy `conservation_mode` attribute. `charge_types` flips the conservation and Rapid Charge bits together, and "off" restores Rapid Charge, which was the setting before conservation mode.
+- Rapid Charge being off costs nothing on third-party chargers: 10→80% took 80 min, at the same wattage as with Rapid on. The charger is the bottleneck.
+- It's guarded by the ideapad sysfs path, not a hostname, so on lynx it just prints an error.
+
 ### Workarounds & Gotchas
 
 **`sysup` cargo step needs the `cargo-update` crate**
@@ -47,6 +54,9 @@ The reminder only names them (obsidian, openlogi, speedtest at time of writing).
 
 **`sysup` kernel detection avoids globs**
 Newest kernel is `ls -v /boot | string replace -rf '^vmlinuz-' ''`, not `/boot/vmlinuz-*`. A fish wildcard that matches nothing prints its own error that `2>/dev/null` can't suppress, which matters in containers/WSL where `/boot` is empty.
+
+**`conserve` reads `conservation_mode`, not `charge_types`**
+Reading `charge_types` on Carina occasionally fails with `Invalid argument`, and the kernel logs "unexpected charge_types: both [Fast] and [Long_Life] are enabled". It happens when the EC briefly reports both battery-mode bits set, apparently around battery uevents, when the kernel logs the line about once a minute; a plain `cat` almost always succeeds. The legacy `conservation_mode` attribute checks only the conservation bit, so it never hits the both-set rejection. The glitch is harmless.
 
 ### See Also
 

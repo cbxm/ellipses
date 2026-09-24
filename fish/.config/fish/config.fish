@@ -41,9 +41,6 @@ alias l="ls -la"
 alias v="vim"
 alias lg="lazygit"
 
-# Audio - reset sticky default sink/source so wireplumber priorities take over
-alias audioauto="wpctl clear-default"
-
 # Cargo (Rust)
 fish_add_path $HOME/.cargo/bin
 

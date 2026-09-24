@@ -1,4 +1,4 @@
-function sysup --description "Update everything: apt, flatpak, brew, uv, bun, cargo, gh ext, fwupd"
+function sys_up --description "Update everything: apt, flatpak, brew, uv, bun, cargo, gh ext, fwupd"
     argparse n/dry-run y/yes -- $argv; or return
 
     set -l yes
@@ -9,43 +9,43 @@ function sysup --description "Update everything: apt, flatpak, brew, uv, bun, ca
     set -q _flag_dry_run; or sudo -v; or return
 
     # Upgrade only against fresh lists.
-    _sysup_run apt sudo apt update
-    and _sysup_run apt sudo apt upgrade $yes
+    _sys_up_run apt sudo apt update
+    and _sys_up_run apt sudo apt upgrade $yes
 
     if command -q flatpak
-        _sysup_run flatpak flatpak update $yes
-        _sysup_run flatpak flatpak uninstall --unused $yes
+        _sys_up_run flatpak flatpak update $yes
+        _sys_up_run flatpak flatpak uninstall --unused $yes
     end
 
     # brew upgrade only auto-updates if the last update is >24h old; force it.
     if command -q brew
-        _sysup_run brew brew update
-        _sysup_run brew brew upgrade
+        _sys_up_run brew brew update
+        _sys_up_run brew brew upgrade
     end
 
     if command -q uv
-        _sysup_run uv uv self update
-        _sysup_run uv uv tool upgrade --all
+        _sys_up_run uv uv self update
+        _sys_up_run uv uv tool upgrade --all
     end
 
     if command -q bun
-        _sysup_run bun bun upgrade
-        _sysup_run bun bun update -g
+        _sys_up_run bun bun upgrade
+        _sys_up_run bun bun update -g
     end
 
     if command -q cargo-install-update
-        _sysup_run cargo cargo install-update -a
+        _sys_up_run cargo cargo install-update -a
     else if command -q cargo
         echo "cargo: binaries not updated; install cargo-update (cargo install cargo-update)"
     end
 
-    command -q gh; and _sysup_run gh gh extension upgrade --all
+    command -q gh; and _sys_up_run gh gh extension upgrade --all
 
     # Firmware: refresh metadata and report only. Installing firmware stays a manual step.
     # get-updates exits 2 when nothing is pending, which is not a failure.
     if command -q fwupdmgr
-        _sysup_run fwupd fwupdmgr refresh --force
-        _sysup_run fwupd fwupdmgr get-updates
+        _sys_up_run fwupd fwupdmgr refresh --force
+        _sys_up_run fwupd fwupdmgr get-updates
         test $status -eq 2; and set -e failed[-1]
     end
 
@@ -76,9 +76,9 @@ function sysup --description "Update everything: apt, flatpak, brew, uv, bun, ca
     end
 end
 
-# Runs one step, or prints it under --dry-run. -S shares sysup's scope so it can
+# Runs one step, or prints it under --dry-run. -S shares sys_up's scope so it can
 # read _flag_dry_run and append to failed.
-function _sysup_run -S -a label
+function _sys_up_run -S -a label
     set -e argv[1]
     set_color --bold blue
     echo "== $label"

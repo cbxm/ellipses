@@ -1,9 +1,9 @@
-function conserve --description "Toggle Lenovo battery conservation mode (~80% charge cap)"
+function sys_battery --description "Toggle Lenovo battery conservation mode (~80% charge cap)"
     set -l flag /sys/bus/platform/devices/VPC2004:00/conservation_mode
     set -l types /sys/class/power_supply/BAT0/charge_types
 
     if not test -e $flag -a -e $types
-        echo "conserve: no ideapad conservation_mode/charge_types on this machine"
+        echo "sys battery: no ideapad conservation_mode/charge_types on this machine"
         return 1
     end
 

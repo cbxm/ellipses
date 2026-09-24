@@ -119,7 +119,7 @@ end
 Edit `fish/.config/fish/config.fish`, add to appropriate section.
 
 **Add fish function:**
-Create `fish/.config/fish/functions/funcname.fish`.
+Create `fish/.config/fish/functions/funcname.fish`. For a system-management tool, name it `sys_<name>.fish` and it becomes `sys <name>`, listed and tab-completed automatically.
 
 **Modify tmux keybindings:**
 Edit `tmux/.config/tmux/tmux.conf`.
@@ -131,7 +131,7 @@ Edit `ghostty/.config/ghostty/config` for terminal, or fish config for shell col
 Edit `nvim/.config/nvim/lua/plugins/` (depends on plugin manager setup).
 
 **Update the system:**
-`sysup` (add `-n` to preview, `-y` for unattended). Covers apt, flatpak, brew, uv, bun, cargo, gh extensions, fwupd report. See `fish/docs.md`.
+`sys up` (add `-n` to preview, `-y` for unattended). Covers apt, flatpak, brew, uv, bun, cargo, gh extensions, fwupd report. See `fish/docs.md`.
 
 ## Foundational Decisions
 

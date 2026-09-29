@@ -19,6 +19,9 @@ Path: @/tmux
 **Split keys: u/i**
 `u` = horizontal (under), `i` = vertical (side-by-side). Mnemonic based on visual orientation.
 
+**New windows open in the current pane's directory**
+`w` passes `-c "#{pane_current_path}"` like the splits do. Without it, new windows open in the session's start directory (wherever `tmux new` ran — `~` for Ghostty's `0main`), which is rarely where you're working.
+
 **Window navigation: n/m**
 `n` = previous, `m` = next. Adjacent keys, easy to hit repeatedly.
 

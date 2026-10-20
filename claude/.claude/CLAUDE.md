@@ -62,3 +62,4 @@ End every plan with a list of unresolved questions, if any. Extremely concise; s
 - Builders always get `isolation: "worktree"`. Their brief says so, and says not to spawn `worktree-setup` on top of it (it makes a stray second worktree; happened 3 of 4 times on 2026-09-04).
 - TaskStop on a builder leaves its `test-runner` children running. `ListAgents`, stop them too.
 - Only `MEMORY.md` loads into a session. Nothing recalls memory file bodies by relevance; a hook line is the whole memory unless someone reads the file. The index is capped at 200 lines / ~25KB.
+- When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file. cf 1.x needs Node >=22 (default Node is 24).

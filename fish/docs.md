@@ -70,6 +70,7 @@ Unlike `functions/` and `conf.d/`, which stow links as whole directories, `~/.co
 
 **`conf.d/` catches installer hooks**
 Because `conf.d/` is stowed as a whole directory, tools that add a startup hook write straight into the repo. `cf.fish` came that way from the cf CLI's completion setup. It sources `~/.config/cf/completions/cf.fish` only if that file exists, so it does nothing on a machine where cf completions haven't been generated. Hooks like this are rewritten to use `$HOME` before committing, since installers hardcode the absolute home path.
+If `cf <Tab>` lists Cloud Foundry commands (`create-org`, `bind-service`), the generated file is stale or missing and fish has fallen back to the Cloud Foundry `cf.fish` it ships with. The generated script removes those, so regenerating with `cf complete fish > ~/.config/cf/completions/cf.fish` fixes it. The file written by an older cf called `cf __complete`, which 1.0.0-beta.18 doesn't have.
 
 ### See Also
 

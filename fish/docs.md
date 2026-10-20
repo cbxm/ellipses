@@ -68,6 +68,9 @@ Reading `charge_types` on Carina occasionally fails with `Invalid argument`, and
 **`completions/sys.fish` needs a re-stow**
 Unlike `functions/` and `conf.d/`, which stow links as whole directories, `~/.config/fish/completions` is a real directory on Carina, since bun writes its completions there. So stow links `sys.fish` into it as a single file, and a new file in `completions/` only appears after `stow fish` is re-run, on each machine.
 
+**`conf.d/` catches installer hooks**
+Because `conf.d/` is stowed as a whole directory, tools that add a startup hook write straight into the repo. `cf.fish` came that way from the cf CLI's completion setup. It sources `~/.config/cf/completions/cf.fish` only if that file exists, so it does nothing on a machine where cf completions haven't been generated. Hooks like this are rewritten to use `$HOME` before committing, since installers hardcode the absolute home path.
+
 ### See Also
 
 - [Fish docs](https://fishshell.com/docs/current/)

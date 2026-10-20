@@ -29,9 +29,21 @@ Path: @/tmux
 Custom status format with git branch, CPU/mem/battery scripts, copy-mode indicator.
 
 **Colours follow the terminal's dark/light theme**
-Every colour in `tmux.conf` and `scripts/` is an ANSI name (`blue`, `brightblack`, ...) or `default`, never hex. tmux sends those to Ghostty as palette indexes, so they render from whichever Ghostty theme is active, Kanagawa Dragon Cream or Flexoki Light, and change the moment the desktop flips, with no reload and no hook. The hardcoded Kanagawa hex it replaced left the bar dark-on-light and fish's text unreadable in light mode. `set -s theme terminal` does the same for tmux's built-in styles (copy-mode selection, menus, choose-tree, the command prompt). Its default, `detect`, draws those from tmux 3.8's own light and dark colour sets, which wouldn't match Ghostty's palette.
+Every colour in `tmux.conf` and `scripts/` is an ANSI name (`blue`, `brightblack`, ...) or `default`, never hex. tmux sends those to Ghostty as palette indexes, so they render from whichever Ghostty theme is active, Kanagawa Dragon Cream or Kanagawa Lotus Gray, and change the moment the desktop flips, with no reload and no hook. The hardcoded Kanagawa hex it replaced left the bar dark-on-light and fish's text unreadable in light mode. `set -s theme terminal` does the same for tmux's built-in styles (copy-mode selection, menus, choose-tree, the command prompt). Its default, `detect`, draws those from tmux 3.8's own light and dark colour sets, which wouldn't match Ghostty's palette.
 
-What this gives up: the bar's slightly lifted background (`#1d1c19` on `#181616`) is now the terminal background, and the muted grey is `brightblack`, which is a readable grey in Kanagawa but Flexoki Light's faintest grey (`#b7b5ac` on `#fffcf0`). So in light mode, inactive window names and pane borders are pale.
+Muted text (inactive window names, pane borders) is `brightblack`. Ghostty's light theme is a local Lotus variant whose only change is a darker slot 8, so that grey stays readable (see `ghostty/docs.md`). What this gives up: the bar's slightly lifted background (`#1d1c19` on `#181616`) is now just the terminal background.
+
+**Badge text is the terminal background, except on green**
+Coloured badges (the active window, PREFIX/ZOOM, datetime, the CPU/RAM/swap/battery levels, COPY MODE, fingers hints) need text that reads on the accent in both themes. Black text on Lotus's accents is 3.0–3.4:1 on blue, red and yellow. The terminal background colour does better on those, but tmux has no colour name for "terminal background" as a foreground. `reverse` gets it: `fg=blue,bg=default,reverse` draws background-coloured text on blue. Green is the one exception, where black reads better in Lotus. Contrast ratios:
+
+| badge | text | Dragon Cream | Lotus |
+|---|---|---|---|
+| blue | terminal bg (`reverse`) | 6.9 | 4.6 |
+| red | terminal bg (`reverse`) | 5.2 | 4.1 |
+| yellow | terminal bg (`reverse`) | 8.7 | 4.2 |
+| green | `black` | 6.5 | 4.2 |
+
+Every badge that sets `reverse` clears it afterwards (`noreverse` or `#[default]`). Otherwise it carries into the next segment, and that segment's spaces render as a solid block of colour.
 
 **tmux 3.8 from Homebrew, not apt**
 Pop!_OS 24.04 ships tmux 3.4, which never passes a terminal theme change on to programs in its panes. It also answers their OSC 11 "what's the background?" query with the colour it cached at attach. So Claude Code (`theme: auto`) and nvim couldn't follow a flip. tmux 3.6 added mode 2031 (an app subscribes and gets `CSI ? 997 ; 1|2 n` on every change), and 3.8 forwards the terminal's own report instead of guessing from the background. When Ghostty reports a flip, 3.8 re-queries Ghostty's colours first and only then notifies the panes, so an app that re-queries OSC 11 on the notification gets the new colour. Verified 2026-10-20 on a scratch server with a fake outer terminal. New machine: `brew install tmux`. apt's 3.4 stays installed as a fallback. It errors on `theme` at startup, which is the sign it's the one that ran.
@@ -63,8 +75,13 @@ tmux-continuum has no daemon: it appends `#(continuum_save.sh)` to `status-right
 
 The second way it dies: continuum only adds its trigger when no *other* tmux server is running at load time, and `tmux -L` scratch servers count. Reloading (`prefix r`) while a scratch server is up resets `status-right` to `""` and leaves it empty. Kill scratch servers before reloading.
 
-**Client and server must be the same tmux version to attach**
-Changing tmux versions means restarting the server: save first (`prefix C-s`), `tmux kill-server`, reopen Ghostty, and continuum restores. A client of another version can run commands against the server (`tmux ls`, `display -p`), but it can't attach. A 3.8 client attaching to a 3.4 server prints `open terminal failed: not a terminal`. A 3.4 client against a 3.8 server prints `server exited unexpectedly`. In practice, Ghostty windows close as soon as they open, and the `prefix p` popup closes immediately. Only 3.4 against 3.8 has been tested. A `brew upgrade` (via `sys up`) can also move tmux to a new version while the old server keeps running, so if new windows start closing right after an update, check this first.
+**Client and server must be the same tmux version**
+Changing tmux versions means restarting the server: save first (`prefix C-s`), `tmux kill-server`, reopen Ghostty, and continuum restores. Mixing versions breaks differently in each direction (both verified 2026-10-20):
+
+- A 3.4 client against a 3.8 server fails on every command, `tmux ls` included, with `server exited unexpectedly`. The server is fine; it's the client that gave up. So `tmux ls` from the old binary tells you nothing about whether the server is up.
+- A 3.8 client can run commands against a 3.4 server (`tmux ls`, `display -p`, `kill-server`), but attaching fails with `open terminal failed: not a terminal`.
+
+In practice, Ghostty windows close as soon as they open, the `prefix p` popup closes immediately, and the status scripts and plugins, which call `tmux` from the server's `PATH`, quietly stop working. A `brew upgrade` (via `sys up`) that moves tmux to a new version under a running server could do the same, so if new windows start closing right after an update, check this first.
 
 ### See Also
 

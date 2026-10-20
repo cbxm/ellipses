@@ -19,4 +19,4 @@ padding=$(( (bar_width - text_len) / 2 ))
 
 # Build the padded bar
 pad=$(printf '%*s' "$padding" '')
-printf '#[fg=black,bg=red,bold]%s%s%s#[default]' "$pad" "$text" "$pad"
+printf '#[fg=red,bg=default,bold,reverse]%s%s%s#[default]' "$pad" "$text" "$pad"

@@ -8,9 +8,38 @@ function sys_up --description "Update everything: apt, flatpak, brew, uv, bun, c
     # Authenticate sudo first so a wrong password aborts before anything runs.
     set -q _flag_dry_run; or sudo -v; or return
 
-    # Upgrade only against fresh lists.
-    _sys_up_run apt sudo apt update
-    and _sys_up_run apt sudo apt upgrade $yes
+    # Upgrade only against fresh lists. full-upgrade so packages that must move
+    # together (a driver switching to a new major version) aren't half held back.
+    # Any removal needs an explicit y at a terminal, even with -y. Declining, no
+    # terminal, or a failed simulation skips apt entirely: plain upgrade is what
+    # splits those package sets in the first place.
+    if _sys_up_run apt sudo apt update
+        set -l sim (apt-get -s full-upgrade 2>&1)
+        if test $status -ne 0
+            printf '  %s\n' (string match -r '^[EW]: .*' -- $sim)
+            set -a failed "apt: full-upgrade simulation failed, apt skipped"
+        else
+            set -l removals (string match -rg '^Remv (\S+)' -- $sim)
+            set -l allowed true
+            if set -q removals[1]
+                echo "apt full-upgrade would remove:"
+                printf '  %s\n' $removals
+                if set -q _flag_dry_run
+                    echo "  (from current lists; the real run re-checks after apt update)"
+                else if isatty stdin
+                    read -l -P "Allow removals? [y/N] " answer
+                    string match -qi 'y*' -- $answer; or set allowed false
+                else
+                    set allowed false
+                end
+            end
+            if test $allowed = true
+                _sys_up_run apt sudo apt full-upgrade $yes
+            else
+                set -a failed "apt: removals not allowed, apt skipped"
+            end
+        end
+    end
 
     if command -q flatpak
         _sys_up_run flatpak flatpak update $yes

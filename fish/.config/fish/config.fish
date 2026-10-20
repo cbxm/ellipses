@@ -48,30 +48,32 @@ fish_add_path $HOME/.cargo/bin
 set -gx FLYCTL_INSTALL "$HOME/.fly"
 fish_add_path $FLYCTL_INSTALL/bin
 
-# === KANAGAWA DRAGON THEME ===
+# === THEME ===
+# ANSI colour names only, never hex, so highlighting uses whichever Ghostty theme is
+# active and follows a desktop dark/light flip. See docs.md.
 # Syntax highlighting
-set -g fish_color_normal c5c9c5
-set -g fish_color_command 8ba4b0
-set -g fish_color_keyword 957fb8
-set -g fish_color_quote 8a9a7b
-set -g fish_color_redirection c4b28a
-set -g fish_color_end c4b28a
-set -g fish_color_error c4746e
-set -g fish_color_param c5c9c5
-set -g fish_color_comment 625e5a
-set -g fish_color_selection --background=2d4f67
-set -g fish_color_search_match --background=2d4f67
-set -g fish_color_operator c4b28a
-set -g fish_color_escape 87a987
-set -g fish_color_autosuggestion 625e5a
+set -g fish_color_normal normal
+set -g fish_color_command blue
+set -g fish_color_keyword magenta
+set -g fish_color_quote green
+set -g fish_color_redirection yellow
+set -g fish_color_end yellow
+set -g fish_color_error red
+set -g fish_color_param normal
+set -g fish_color_comment brblack
+set -g fish_color_selection --reverse
+set -g fish_color_search_match --reverse
+set -g fish_color_operator yellow
+set -g fish_color_escape cyan
+set -g fish_color_autosuggestion brblack
 set -g fish_color_valid_path --underline
 
 # Pager colors
-set -g fish_pager_color_progress 625e5a
-set -g fish_pager_color_prefix 8ba4b0
-set -g fish_pager_color_completion c5c9c5
-set -g fish_pager_color_description 625e5a
-set -g fish_pager_color_selected_background --background=2d4f67
+set -g fish_pager_color_progress brblack
+set -g fish_pager_color_prefix blue
+set -g fish_pager_color_completion normal
+set -g fish_pager_color_description brblack
+set -g fish_pager_color_selected_background --reverse
 
 if test -x /home/linuxbrew/.linuxbrew/bin/brew
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

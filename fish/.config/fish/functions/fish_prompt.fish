@@ -2,12 +2,12 @@ function fish_prompt
     set -l last_status $status
     set -l cwd (prompt_pwd)
     
-    # Colors (Kanagawa Dragon)
-    set -l blue 8ba4b0
-    set -l yellow c4b28a
-    set -l red c4746e
-    set -l muted 625e5a
-    set -l green 8a9a7b
+    # ANSI names so the prompt follows the terminal's dark/light theme
+    set -l blue blue
+    set -l yellow yellow
+    set -l red red
+    set -l muted brblack
+    set -l green green
     
     # Directory
     set_color $blue

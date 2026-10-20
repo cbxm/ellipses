@@ -10,8 +10,8 @@ Path: @/fish
 
 ### Key Choices
 
-**Kanagawa Dragon theme**
-Consistent color scheme across terminal tools. Colors defined inline rather than sourcing a theme file for simplicity.
+**Syntax colours are ANSI names, never hex**
+`fish_color_*` and `fish_pager_color_*` in `config.fish`, and the fallback `fish_prompt`, use names like `blue` and `brblack`, so fish draws from whichever Ghostty theme is active and follows a desktop dark/light flip mid-session. Each slot keeps the role it had as Kanagawa hex. The muted grey is `brblack` (comments, autosuggestions, pager descriptions), and selections use `--reverse` because no single background colour works on both a dark and a light theme. The hex this replaced made the command line `#c5c9c5` on Flexoki Light's cream, which was unreadable. `brblack` is faint in light mode by design: Flexoki puts its readable grey in slot 7. Colours are set inline as globals rather than via a theme file, for simplicity. Globals shadow universals, so the old hex values still sitting in Carina's untracked `fish_variables` never apply.
 
 **Alias philosophy: short mnemonics**
 Git aliases are two letters (`gs`, `gp`, `gl`). APT aliases follow `s` (sudo) + `a` (apt) + action (`i`, `r`, `u`). Fly.io uses app suffix (`flp` = fly logs prod).

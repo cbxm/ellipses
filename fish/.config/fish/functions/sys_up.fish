@@ -8,9 +8,26 @@ function sys_up --description "Update everything: apt, flatpak, brew, uv, bun, c
     # Authenticate sudo first so a wrong password aborts before anything runs.
     set -q _flag_dry_run; or sudo -v; or return
 
-    # Upgrade only against fresh lists.
-    _sys_up_run apt sudo apt update
-    and _sys_up_run apt sudo apt upgrade $yes
+    # Upgrade only against fresh lists. full-upgrade so packages that must move
+    # together (a driver switching to a new major version) aren't half held back.
+    # Removals always need an explicit yes, even with -y; declining falls back to
+    # plain upgrade, and no answer (no TTY) counts as declining.
+    if _sys_up_run apt sudo apt update
+        set -l mode full-upgrade
+        set -l removals (apt-get -s full-upgrade 2>/dev/null | string match -rg '^Remv (\S+)')
+        if set -q removals[1]
+            echo "apt full-upgrade would remove:"
+            printf '  %s\n' $removals
+            if not set -q _flag_dry_run
+                read -l -P "Allow removals? [y/N] " answer
+                if not string match -qi y -- $answer
+                    set mode upgrade
+                    echo "Falling back to apt upgrade (held-back packages stay held)."
+                end
+            end
+        end
+        _sys_up_run apt sudo apt $mode $yes
+    end
 
     if command -q flatpak
         _sys_up_run flatpak flatpak update $yes

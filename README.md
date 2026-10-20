@@ -52,7 +52,7 @@ EOF
 
 **Tmux plugins:** Managed by [tpm](https://github.com/tmux-plugins/tpm). After stowing, run `prefix + I` to install.
 
-**Tmux version:** The config needs tmux 3.8 or newer (`brew install tmux`) so dark/light theme changes reach programs inside tmux. Ubuntu 24.04's apt tmux is 3.4. See `tmux/docs.md`.
+**Tmux version:** The config needs tmux 3.8 or newer (`brew install tmux`; if `tmux -V` still says 3.4 afterwards, `brew link tmux`) so dark/light theme changes reach programs inside tmux. Ubuntu 24.04's apt tmux is 3.4. See `tmux/docs.md`.
 
 ## Structure
 

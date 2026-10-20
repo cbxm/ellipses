@@ -11,7 +11,13 @@ Path: @/fish
 ### Key Choices
 
 **Syntax colours are ANSI names, never hex**
-`fish_color_*` and `fish_pager_color_*` in `config.fish`, and the fallback `fish_prompt`, use names like `blue` and `brblack`, so fish draws from whichever Ghostty theme is active and follows a desktop dark/light flip mid-session. Each slot keeps the role it had as Kanagawa hex. The muted grey is `brblack` (comments, autosuggestions, pager descriptions), and selections use `--reverse` because no single background colour works on both a dark and a light theme. With the hex this replaced, the command line came out `#c5c9c5` on the light theme's background, which was unreadable. `brblack` is only readable in light mode because the local Kanagawa Lotus variant darkens slot 8 (see `ghostty/docs.md`). On Lotus, strings (`green`, 3.3:1) and keywords (`magenta`, 3.7:1) are the weakest colours. Colours are set inline as globals rather than via a theme file, for simplicity. Globals shadow universals, so the old hex values still sitting in Carina's untracked `fish_variables` never apply.
+`fish_color_*` and `fish_pager_color_*` in `config.fish`, and the fallback `fish_prompt`, use names like `blue` and `brblack`, so fish draws from whichever Ghostty theme is active and follows a desktop dark/light flip mid-session. Each colour maps to the nearest ANSI slot.
+
+In dark mode most of them match the old hex exactly: commands (`blue`), strings (`green`), operators and redirections (`yellow`), errors (`red`), and the muted grey `brblack` (comments, autosuggestions, pager descriptions, `#625e5a` via the Dragon Cream variant). Four differ:
+- Plain text is the `#c8c093` foreground instead of `#c5c9c5`.
+- Keywords are `magenta` `#a292a3` instead of `#957fb8`.
+- Escapes are `cyan` `#8ea4a2` instead of `#87a987`.
+- Selections are `--reverse` instead of a `#2d4f67` background, because no single background colour works on both a dark and a light theme. With the hex this replaced, the command line came out `#c5c9c5` on the light theme's background, which was unreadable. `brblack` is only readable in light mode because the local Kanagawa Lotus variant darkens slot 8 (see `ghostty/docs.md`). On Lotus, strings (`green`, 3.3:1) and keywords (`magenta`, 3.7:1) are the weakest colours. Colours are set inline as globals rather than via a theme file, for simplicity. Globals shadow universals, so the old hex values still sitting in Carina's untracked `fish_variables` never apply.
 
 **Alias philosophy: short mnemonics**
 Git aliases are two letters (`gs`, `gp`, `gl`). APT aliases follow `s` (sudo) + `a` (apt) + action (`i`, `r`, `u`). Fly.io uses app suffix (`flp` = fly logs prod).

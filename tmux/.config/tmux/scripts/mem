@@ -9,11 +9,11 @@ read ram swap <<< $(free -b | awk '
 # RAM color thresholds (for ~13GB system)
 ram_int=${ram%.*}
 if [ "$ram_int" -gt 11 ]; then
-  c='#c4746e'
+  c='red'
 elif [ "$ram_int" -gt 8 ]; then
-  c='#c4b28a'
+  c='yellow'
 else
-  c='#8a9a7b'
+  c='green'
 fi
 
 ram_icon=$'\uf2db'
@@ -23,13 +23,13 @@ if (( $(echo "$swap > 0.1" | bc -l) )); then
   # Swap color
   swap_int=${swap%.*}
   if [ "$swap_int" -gt 40 ]; then
-    sc='#c4746e'
+    sc='red'
   elif [ "$swap_int" -gt 20 ]; then
-    sc='#c4b28a'
+    sc='yellow'
   else
-    sc='#8a9a7b'
+    sc='green'
   fi
-  printf '#[fg=#181616,bg=%s] %s %s #[fg=#181616,bg=%s] %s %s ' "$c" "$ram_icon" "$ram" "$sc" "$swap_icon" "$swap"
+  printf '#[fg=black,bg=%s] %s %s #[fg=black,bg=%s] %s %s ' "$c" "$ram_icon" "$ram" "$sc" "$swap_icon" "$swap"
 else
-  printf '#[fg=#181616,bg=%s] %s %s ' "$c" "$ram_icon" "$ram"
+  printf '#[fg=black,bg=%s] %s %s ' "$c" "$ram_icon" "$ram"
 fi

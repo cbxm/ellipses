@@ -3,11 +3,11 @@ bat=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null || echo 50)
 status=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null || echo "Unknown")
 
 if [ "$bat" -lt 20 ]; then
-  c='#c4746e'
+  c='red'
 elif [ "$bat" -lt 50 ]; then
-  c='#c4b28a'
+  c='yellow'
 else
-  c='#8a9a7b'
+  c='green'
 fi
 
 if [ "$status" = "Charging" ]; then
@@ -16,4 +16,4 @@ else
   icon=$'\U000f0079'
 fi
 
-printf '#[fg=#181616,bg=%s] %s %s%% ' "$c" "$icon" "$bat"
+printf '#[fg=black,bg=%s] %s %s%% ' "$c" "$icon" "$bat"

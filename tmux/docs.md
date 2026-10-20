@@ -45,6 +45,21 @@ Coloured badges (the active window, PREFIX/ZOOM, datetime, the CPU/RAM/swap/batt
 
 Every badge that sets `reverse` clears it afterwards (`noreverse` or `#[default]`). Otherwise it carries into the next segment, and that segment's spaces render as a solid block of colour.
 
+**Built-in UI styles are overridden for Lotus**
+With `theme terminal`, tmux's defaults draw menus and popups as black boxes with slot-7 text, and highlights as black text on yellow, cyan or magenta. Kanagawa Lotus's slot 7 is its foreground grey, so in light mode menus were 2.2:1 and copy-mode highlights 3.3–3.7:1. The overrides use the same tools as the badges. Selections (`mode-style`, which choose-tree's selected line and the copy-mode position also use) are plain reverse video. That's how Ghostty draws its own selection, and it keeps whatever contrast the selected text already had. Menus and popups use the terminal's own colours, with `brightblack` borders. Contrast ratios:
+
+| style | rendering | Dragon Cream | Lotus | Lotus before |
+|---|---|---|---|---|
+| `mode-style` (copy selection, tree selection) | reverse video | 9.8 | 6.2 | 3.3 |
+| `copy-mode-match-style` | black on `brightblue` | 8.6 | 5.1 | 3.5 |
+| `copy-mode-current-match-style` | terminal bg on `brightmagenta` | 5.5 | 6.1 | 3.7 |
+| `copy-mode-mark-style` | terminal bg on blue | 6.9 | 4.6 | 3.3 |
+| `menu-style`, `popup-style` | terminal fg on bg | 9.8 | 6.2 | 2.2 |
+| `menu-selected-style` | reverse video | 9.8 | 6.2 | 3.3 |
+| menu, popup, choose-tree, display-panes borders | `brightblack` | 7.3 | 4.3 | 2.2 |
+
+Left at tmux's defaults, because they're rarely seen: `message-command-style` (the command prompt after Escape in vi mode, yellow on black, 3.3:1 in Lotus), `switch-mode-match-style` (switch-mode isn't bound), copy-mode line numbers (off), `fill-character` and pane scrollbars (off).
+
 **tmux 3.8 from Homebrew, not apt**
 Pop!_OS 24.04 ships tmux 3.4, which never passes a terminal theme change on to programs in its panes. It also answers their OSC 11 "what's the background?" query with the colour it cached at attach. So Claude Code (`theme: auto`) and nvim couldn't follow a flip. tmux 3.6 added mode 2031 (an app subscribes and gets `CSI ? 997 ; 1|2 n` on every change), and 3.8 forwards the terminal's own report instead of guessing from the background. When Ghostty reports a flip, 3.8 re-queries Ghostty's colours first and only then notifies the panes, so an app that re-queries OSC 11 on the notification gets the new colour. Verified 2026-10-20 on a scratch server with a fake outer terminal. New machine: `brew install tmux`. apt's 3.4 stays installed as a fallback. It errors on `theme` at startup, which is the sign it's the one that ran.
 

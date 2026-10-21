@@ -1,13 +1,13 @@
 #!/bin/bash
 cpu=$(top -bn1 | awk '/Cpu/{print 100-$8}' | head -1)
 cpu=${cpu%.*}
-# Badge style: terminal-background text (reverse) on red and yellow, black on green,
-# whichever reads in both Ghostty themes. See tmux/docs.md.
+# Only warning levels get a badge: terminal-background text (reverse) on red and
+# yellow. The normal level is plain text in the terminal's own foreground. See tmux/docs.md.
 if [ "$cpu" -gt 80 ]; then
   c='fg=red,bg=default,reverse'
 elif [ "$cpu" -gt 50 ]; then
   c='fg=yellow,bg=default,reverse'
 else
-  c='fg=black,bg=green,noreverse'
+  c='fg=default,bg=default,noreverse'
 fi
 printf '#[%s] %s %s%% #[noreverse]' "$c" $'\uf0e7' "$cpu"

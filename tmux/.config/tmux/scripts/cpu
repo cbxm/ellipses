@@ -1,11 +1,13 @@
 #!/bin/bash
 cpu=$(top -bn1 | awk '/Cpu/{print 100-$8}' | head -1)
 cpu=${cpu%.*}
+# Badge style: terminal-background text (reverse) on red and yellow, black on green,
+# whichever reads in both Ghostty themes. See tmux/docs.md.
 if [ "$cpu" -gt 80 ]; then
-  c='#c4746e'
+  c='fg=red,bg=default,reverse'
 elif [ "$cpu" -gt 50 ]; then
-  c='#c4b28a'
+  c='fg=yellow,bg=default,reverse'
 else
-  c='#8a9a7b'
+  c='fg=black,bg=green,noreverse'
 fi
-printf '#[fg=#181616,bg=%s] %s %s%% ' "$c" $'\uf0e7' "$cpu"
+printf '#[%s] %s %s%% #[noreverse]' "$c" $'\uf0e7' "$cpu"

@@ -24,7 +24,7 @@ stow -n -v fish
 |---------|------------|-------|
 | `fish` | Fish shell | config.fish, functions/, conf.d/ |
 | `ghostty` | Ghostty terminal | config, custom.css |
-| `tmux` | Tmux multiplexer | tmux.conf, scripts/ (plugins installed by tpm) |
+| `tmux` | Tmux multiplexer | tmux.conf, scripts/ (plugins installed by tpm); needs brew's tmux 3.8, not apt's 3.4 |
 | `starship` | Starship prompt | starship.toml |
 | `bash` | Bash shell | .bashrc (fallback shell) |
 | `nvim` | Neovim | init.lua, lua/, after/ |

@@ -6,14 +6,16 @@ read ram swap <<< $(free -b | awk '
   END { printf "%.1f %.1f", ram, swap }
 ')
 
-# RAM color thresholds (for ~13GB system)
+# RAM color thresholds (for ~13GB system). Badge style: terminal-background text
+# (reverse) on red and yellow, black on green, whichever reads in both Ghostty
+# themes. See tmux/docs.md.
 ram_int=${ram%.*}
 if [ "$ram_int" -gt 11 ]; then
-  c='#c4746e'
+  c='fg=red,bg=default,reverse'
 elif [ "$ram_int" -gt 8 ]; then
-  c='#c4b28a'
+  c='fg=yellow,bg=default,reverse'
 else
-  c='#8a9a7b'
+  c='fg=black,bg=green,noreverse'
 fi
 
 ram_icon=$'\uf2db'
@@ -23,13 +25,13 @@ if (( $(echo "$swap > 0.1" | bc -l) )); then
   # Swap color
   swap_int=${swap%.*}
   if [ "$swap_int" -gt 40 ]; then
-    sc='#c4746e'
+    sc='fg=red,bg=default,reverse'
   elif [ "$swap_int" -gt 20 ]; then
-    sc='#c4b28a'
+    sc='fg=yellow,bg=default,reverse'
   else
-    sc='#8a9a7b'
+    sc='fg=black,bg=green,noreverse'
   fi
-  printf '#[fg=#181616,bg=%s] %s %s #[fg=#181616,bg=%s] %s %s ' "$c" "$ram_icon" "$ram" "$sc" "$swap_icon" "$swap"
+  printf '#[%s] %s %s #[%s] %s %s #[noreverse]' "$c" "$ram_icon" "$ram" "$sc" "$swap_icon" "$swap"
 else
-  printf '#[fg=#181616,bg=%s] %s %s ' "$c" "$ram_icon" "$ram"
+  printf '#[%s] %s %s #[noreverse]' "$c" "$ram_icon" "$ram"
 fi

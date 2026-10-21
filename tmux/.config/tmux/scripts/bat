@@ -2,12 +2,14 @@
 bat=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null || echo 50)
 status=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null || echo "Unknown")
 
+# Badge style: terminal-background text (reverse) on red and yellow, black on green,
+# whichever reads in both Ghostty themes. See tmux/docs.md.
 if [ "$bat" -lt 20 ]; then
-  c='#c4746e'
+  c='fg=red,bg=default,reverse'
 elif [ "$bat" -lt 50 ]; then
-  c='#c4b28a'
+  c='fg=yellow,bg=default,reverse'
 else
-  c='#8a9a7b'
+  c='fg=black,bg=green,noreverse'
 fi
 
 if [ "$status" = "Charging" ]; then
@@ -16,4 +18,4 @@ else
   icon=$'\U000f0079'
 fi
 
-printf '#[fg=#181616,bg=%s] %s %s%% ' "$c" "$icon" "$bat"
+printf '#[%s] %s %s%% #[noreverse]' "$c" "$icon" "$bat"

@@ -40,15 +40,16 @@ Dark mode differs from the old hex in three places:
 - Plain bar text, like the git branch, is the `#c8c093` foreground instead of `#c5c9c5`.
 - The bar's slightly lifted background (`#1d1c19` on `#181616`) is now just the terminal background.
 
-**Badge text is the terminal background, except on green**
-Coloured badges (the active window, PREFIX/ZOOM, datetime, the CPU/RAM/swap/battery levels, COPY MODE, fingers hints) need text that reads on the accent in both themes. Black text on Lotus's accents is 3.0–3.4:1 on blue, red and yellow. The terminal background colour does better on those, but tmux has no colour name for "terminal background" as a foreground. `reverse` gets it: `fg=blue,bg=default,reverse` draws background-coloured text on blue. Green is the one exception, where black reads better in Lotus. Contrast ratios:
+**Badge text is the terminal background**
+Coloured badges (the active window, PREFIX/ZOOM, datetime, CPU/RAM/swap/battery warnings, COPY MODE, fingers hints) need text that reads on the accent in both themes. Black text on Lotus's accents is 3.0–3.4:1 on blue, red and yellow. The terminal background colour does better on those, but tmux has no colour name for "terminal background" as a foreground. `reverse` gets it: `fg=blue,bg=default,reverse` draws background-coloured text on blue. Contrast ratios:
 
 | badge | text | Dragon Cream | Lotus |
 |---|---|---|---|
 | blue | terminal bg (`reverse`) | 6.9 | 4.6 |
 | red | terminal bg (`reverse`) | 5.2 | 4.1 |
 | yellow | terminal bg (`reverse`) | 8.7 | 4.2 |
-| green | `black` | 6.5 | 4.2 |
+
+CPU, RAM, swap and battery only get a badge at their yellow and red levels. At the normal level they're plain text in the terminal's foreground (9.8:1 in Dragon Cream, 6.2:1 in Lotus). They used to sit in green badges, black on green, 4.2:1 in Lotus. That was the hardest text to read of anything on screen all the time. It also meant the bar was loudest when there was nothing to report. Now a badge only appears when a reading needs attention.
 
 Every badge that sets `reverse` clears it afterwards (`noreverse` or `#[default]`). Otherwise it carries into the next segment, and that segment's spaces render as a solid block of colour.
 

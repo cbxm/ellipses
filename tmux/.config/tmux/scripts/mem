@@ -6,16 +6,16 @@ read ram swap <<< $(free -b | awk '
   END { printf "%.1f %.1f", ram, swap }
 ')
 
-# RAM color thresholds (for ~13GB system). Badge style: terminal-background text
-# (reverse) on red and yellow, black on green, whichever reads in both Ghostty
-# themes. See tmux/docs.md.
+# RAM color thresholds (for ~13GB system). Only warning levels get a badge:
+# terminal-background text (reverse) on red and yellow. The normal level is plain
+# text in the terminal's own foreground. See tmux/docs.md.
 ram_int=${ram%.*}
 if [ "$ram_int" -gt 11 ]; then
   c='fg=red,bg=default,reverse'
 elif [ "$ram_int" -gt 8 ]; then
   c='fg=yellow,bg=default,reverse'
 else
-  c='fg=black,bg=green,noreverse'
+  c='fg=default,bg=default,noreverse'
 fi
 
 ram_icon=$'\uf2db'
@@ -29,7 +29,7 @@ if (( $(echo "$swap > 0.1" | bc -l) )); then
   elif [ "$swap_int" -gt 20 ]; then
     sc='fg=yellow,bg=default,reverse'
   else
-    sc='fg=black,bg=green,noreverse'
+    sc='fg=default,bg=default,noreverse'
   fi
   printf '#[%s] %s %s #[%s] %s %s #[noreverse]' "$c" "$ram_icon" "$ram" "$sc" "$swap_icon" "$swap"
 else

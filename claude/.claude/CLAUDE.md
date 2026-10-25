@@ -63,3 +63,4 @@ End every plan with a list of unresolved questions, if any. Extremely concise; s
 - TaskStop on a builder leaves its `test-runner` children running. `ListAgents`, stop them too.
 - Only `MEMORY.md` loads into a session. Nothing recalls memory file bodies by relevance; a hook line is the whole memory unless someone reads the file. The index is capped at 200 lines / ~25KB.
 - When interacting with Cloudflare, use the cf CLI unless the project has a Wrangler configuration file. cf 1.x needs Node >=22 (default Node is 24).
+- cf has two auth profiles: `x2u` is bound to ~/src/x2u (`cf auth activate`), `default` (personal) covers everything else. If a command hits the wrong account, run `cf auth whoami` to check which profile resolved; never `cf auth login --force`, it overwrites the default login. For one command elsewhere, pass `--profile x2u`.

@@ -45,13 +45,21 @@ end
 
 function _sys_portal_patch -S
     set -l proto $cache/cosmic-protocols
-    set -l patch (path dirname (functions --details sys_portal))/sys_portal.patch
+    # Absolute, because it's read both from here and from inside the checkout (git -C).
+    # `functions --details` gives the path as sourced, which may be relative.
+    set -l patch (path resolve (path dirname (functions --details sys_portal))/sys_portal.patch)
+    if not test -f $patch -a -r $patch
+        echo "sys portal: can't read the fix at $patch" >&2
+        return 1
+    end
 
+    # debian/control's Build-Depends, minus the packaging tools (debhelper, just).
     set -l missing
-    for dep in libxkbcommon-dev libpipewire-0.3-dev libgbm-dev libegl-dev libclang-dev
+    for dep in libclang-dev libegl-dev libgbm-dev libglib2.0-dev libpipewire-0.3-dev libwayland-dev libxkbcommon-dev
         dpkg-query -W -f '${db:Status-Status}' $dep 2>/dev/null | string match -q installed
         or set -a missing $dep
     end
+    command -q pkg-config; or set -a missing pkg-config
     command -q cargo; or set -a missing cargo
     if set -q missing[1]
         echo "sys portal: missing build dependencies; install them with:" >&2

@@ -58,6 +58,17 @@ Deliberately out of scope: npm globals per fnm node version, tmux/nvim plugins, 
 - Rapid Charge being off costs nothing on third-party chargers: 10→80% took 80 min, at the same wattage as with Rapid on. The charger is the bottleneck.
 - It's guarded by the ideapad sysfs path, not a hostname, so on lynx it just prints an error.
 
+**`sys portal`: local fix for COSMIC screen-share freezes**
+`functions/sys_portal.fish`. On 2026-10-26 a screen share froze mid-call and the portal logged "wayland thread crash; terminating". It's upstream bug [#389](https://github.com/pop-os/xdg-desktop-portal-cosmic/issues/389) (same as #384, both open at the time). cosmic-protocols' client toolkit reports a finished capture frame before destroying it. The portal asks for the next frame from that callback, and cosmic-comp rejects a second live frame on the session with a `duplicate_frame` protocol error, which kills the portal's Wayland connection. `sys portal patch` rebuilds the installed version with the destroy moved first (`functions/sys_portal.patch`), `sys portal restore` puts the packaged binary back, and bare `sys portal` says which one is installed.
+
+- It builds exactly what's installed. Pop's version string ends in the upstream commit (`1.11.0~1792525517~24.04~f448ddf`), and cosmic-protocols is checked out at the rev that commit's `Cargo.lock` pins, so the patch is the only difference from the package. Cargo picks it up through a `[patch]` table appended to `Cargo.toml`, which is why the build can't use `--locked`.
+- It stops if the patch no longer applies, or is already in cosmic-protocols. Either way that's the cue to check #389, not to force it. If cargo ignores the `[patch]` (it only warns "Patch ... was not used"), the lock still names the git source, and it refuses to install.
+- Clones and `target/` live in `~/.cache/sys-portal`, so a rebuild after a version bump is incremental. An already-patched cosmic-protocols tree is left untouched, because rewriting the file makes cargo rebuild libcosmic, iced and cosmic-files on top of it.
+- It overwrites `/usr/libexec/xdg-desktop-portal-cosmic` in place rather than using `dpkg-divert`. With a divert, apt installs new official versions under the diverted name, so an upstream fix would never take effect while the stale patched build kept running. The cost is that **`sys up` silently undoes the patch** whenever the package updates. Run `sys portal patch` again afterwards, and it says so if the new version already has the fix.
+- "Official" means the binary's md5 matches dpkg's `md5sums` for the package. Before installing, `patch` copies the official binary to `~/.cache/sys-portal/official`. `restore` uses that copy only if it still matches dpkg's checksum, so a copy from an older version is ignored. Otherwise it runs `apt install --reinstall` of the installed version, which fails once a newer build ships, because Pop's repo carries only the newest one. `restore` also deletes `xdg-desktop-portal-cosmic.orig-*` copies left in `/usr/libexec` by hand-patching.
+- The portal restart is skipped while a share is running (a `cosmic-screencast` PipeWire node exists), since restarting ends the share. The new binary then takes over on the portal's next start.
+- The patch lives in `functions/` because `functions/` is stowed as a whole directory, so a new file there is live without a re-stow. Fish only autoloads `*.fish`, so it ignores the `.patch`.
+
 ### Workarounds & Gotchas
 
 **`sys up` cargo step needs the `cargo-update` crate**

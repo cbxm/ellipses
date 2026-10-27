@@ -26,7 +26,10 @@ begin;
 select set_config('request.system','on',true) \g /dev/null
 select f.id, f.created_at::date, f.status, coalesce(f.priority,'-') as priority, f.type, f.origin,
        f.source_app_key, f.org_id, left(regexp_replace(f.title,'\s+',' ','g'),80) as title,
-       (select count(*) from feedback_comment c where c.feedback_id=f.id and c.author_user_id='system:support-agent') as bot_touches
+       (select count(*) from feedback_comment c where c.feedback_id=f.id and c.author_user_id='system:support-agent') as bot_touches,
+       (select count(*) from feedback_comment c where c.feedback_id=f.id and c.author_is_staff
+          and c.author_user_id is distinct from 'system:support-agent') as staff_comments,
+       (select max(c.created_at)::date from feedback_comment c where c.feedback_id=f.id) as last_comment
 from feedback f
 where f.status in ('open','triaged','in_progress')
 order by f.created_at;
@@ -47,7 +50,8 @@ SQL
   ;;
 status)
   id="$1"; st="$2"; note="${3:-}"
-  q -A -v id="$id" -v st="$st" -v note="$note" -v aid="$AUTHOR_ID" -v aname="$AUTHOR_NAME" <<'SQL'
+  case "$st" in open|triaged|in_progress|resolved|closed|wont_fix) ;; *) echo "bad status: $st" >&2; exit 2 ;; esac
+  out=$(q -A -t -v id="$id" -v st="$st" -v note="$note" -v aid="$AUTHOR_ID" -v aname="$AUTHOR_NAME" <<'SQL'
 begin;
 select set_config('request.system','on',true) \g /dev/null
 with cur as (
@@ -65,9 +69,12 @@ from cur join upd on upd.id = cur.id
 returning 'changed', feedback_id;
 commit;
 SQL
+)
+  echo "${out:-unchanged: $id is already $st (or does not exist)}"
   ;;
 priority)
   id="$1"; p="$2"
+  case "$p" in low|normal|high|urgent) ;; *) echo "bad priority: $p" >&2; exit 2 ;; esac
   q -A -v id="$id" -v p="$p" <<'SQL'
 begin;
 select set_config('request.system','on',true) \g /dev/null

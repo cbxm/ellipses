@@ -29,7 +29,10 @@ select f.id, f.created_at::date, f.status, coalesce(f.priority,'-') as priority,
        (select count(*) from feedback_comment c where c.feedback_id=f.id and c.author_user_id='system:support-agent') as bot_touches,
        (select count(*) from feedback_comment c where c.feedback_id=f.id and c.author_is_staff
           and c.author_user_id is distinct from 'system:support-agent') as staff_comments,
-       (select max(c.created_at)::date from feedback_comment c where c.feedback_id=f.id) as last_comment
+       (select to_char(max(c.created_at),'YYYY-MM-DD"T"HH24:MI') from feedback_comment c where c.feedback_id=f.id
+          and c.author_is_staff and c.author_user_id is distinct from 'system:support-agent') as last_staff_at,
+       (select to_char(max(c.created_at),'YYYY-MM-DD"T"HH24:MI') from feedback_comment c where c.feedback_id=f.id
+          and c.author_user_id = 'system:support-agent') as last_bot_at
 from feedback f
 where f.status in ('open','triaged','in_progress')
 order by f.created_at;
@@ -69,7 +72,7 @@ from cur join upd on upd.id = cur.id
 returning 'changed', feedback_id;
 commit;
 SQL
-)
+) || { printf '%s\n' "$out" >&2; exit 3; }
   echo "${out:-unchanged: $id is already $st (or does not exist)}"
   ;;
 priority)
@@ -81,7 +84,7 @@ select set_config('request.system','on',true) \g /dev/null
 update feedback set priority = :'p', updated_at = now() where id = :'id' returning 'priority', id, priority;
 commit;
 SQL
-)
+) || { printf '%s\n' "$out" >&2; exit 3; }
   echo "${out:-not found: $id}"
   ;;
 *) usage ;;

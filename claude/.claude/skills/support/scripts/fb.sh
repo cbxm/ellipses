@@ -12,12 +12,12 @@
 # transaction. status_change rows never email the submitter.
 set -euo pipefail
 
-URL="${FEEDBACK_DB_URL:-$(cat "${XDG_CONFIG_HOME:-$HOME/.config}/x2u/feedback-db")}"
 AUTHOR_ID='system:support-agent'
 AUTHOR_NAME='Support bot'
 
-q() { psql "$URL" -X -q -v ON_ERROR_STOP=1 "$@" 2>&1 | sed 's#postgres[^ ]*#<db-url>#g'; }
+q() { local URL="${FEEDBACK_DB_URL:-$(cat "${XDG_CONFIG_HOME:-$HOME/.config}/x2u/feedback-db")}"; psql "$URL" -X -q -v ON_ERROR_STOP=1 "$@" 2>&1 | sed -E 's#postgres(ql)?://[^ ]*#<db-url>#g'; }
 
+usage() { sed -n '2,9p' "$0"; exit 2; }
 cmd="${1:-}"; shift || true
 case "$cmd" in
 list)
@@ -37,7 +37,7 @@ commit;
 SQL
   ;;
 show)
-  id="$1"
+  [ $# -ge 1 ] || usage; id="$1"
   q -x -v id="$id" <<'SQL'
 begin;
 select set_config('request.system','on',true) \g /dev/null
@@ -49,7 +49,7 @@ commit;
 SQL
   ;;
 status)
-  id="$1"; st="$2"; note="${3:-}"
+  [ $# -ge 2 ] || usage; id="$1"; st="$2"; note="${3:-}"
   case "$st" in open|triaged|in_progress|resolved|closed|wont_fix) ;; *) echo "bad status: $st" >&2; exit 2 ;; esac
   out=$(q -A -t -v id="$id" -v st="$st" -v note="$note" -v aid="$AUTHOR_ID" -v aname="$AUTHOR_NAME" <<'SQL'
 begin;
@@ -73,14 +73,16 @@ SQL
   echo "${out:-unchanged: $id is already $st (or does not exist)}"
   ;;
 priority)
-  id="$1"; p="$2"
+  [ $# -ge 2 ] || usage; id="$1"; p="$2"
   case "$p" in low|normal|high|urgent) ;; *) echo "bad priority: $p" >&2; exit 2 ;; esac
-  q -A -v id="$id" -v p="$p" <<'SQL'
+  out=$(q -A -t -v id="$id" -v p="$p" <<'SQL'
 begin;
 select set_config('request.system','on',true) \g /dev/null
 update feedback set priority = :'p', updated_at = now() where id = :'id' returning 'priority', id, priority;
 commit;
 SQL
+)
+  echo "${out:-not found: $id}"
   ;;
-*) sed -n '2,9p' "$0"; exit 2 ;;
+*) usage ;;
 esac

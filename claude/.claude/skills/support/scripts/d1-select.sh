@@ -8,5 +8,6 @@ if ! printf '%s' "$trimmed" | grep -qiE '^(select|with)[[:space:]]' || printf '%
    || printf '%s' "$trimmed" | grep -qiE '\b(insert|update|delete|drop|alter|create|replace|pragma|attach)\b'; then
   echo "refused: only a single SELECT is allowed" >&2; exit 2
 fi
-cd "${AI7_DIR:-$HOME/src/x2u/ai7}"
-exec npx wrangler d1 execute ai7 --remote --json --command "$trimmed"
+# ai7's D1 database (database_id in ai7/wrangler.jsonc). Uses the cf CLI's x2u
+# profile; wrangler has no non-interactive auth on the routine host.
+exec cf d1 query 336feb62-e178-4824-a865-a9cdc0bf5884 --profile x2u --sql "$trimmed"

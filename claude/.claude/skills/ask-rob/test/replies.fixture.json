@@ -1,0 +1,54 @@
+{
+  "ok": true,
+  "messages": [
+    {
+      "type": "message",
+      "user": "U0BOTDEVLOG",
+      "bot_id": "B0BOTDEVLOG",
+      "app_id": "A0APPDEVLOG",
+      "text": "<@U0ARUPH3T2M> Claude here, asking on Caden's behalf.\n\nShould a no-show fee apply to rebooked appointments?\n\n_Reply in thread._",
+      "ts": "1793000000.000100",
+      "thread_ts": "1793000000.000100",
+      "reply_count": 4,
+      "reply_users": ["U0BOTDEVLOG", "U0STEVE0001", "U0ARUPH3T2M"]
+    },
+    {
+      "type": "message",
+      "user": "U0BOTDEVLOG",
+      "bot_id": "B0BOTDEVLOG",
+      "app_id": "A0APPDEVLOG",
+      "text": "Follow-up from Claude: this blocks the cancellations MR.",
+      "ts": "1793000060.000200",
+      "thread_ts": "1793000000.000100",
+      "parent_user_id": "U0BOTDEVLOG"
+    },
+    {
+      "type": "message",
+      "user": "U0STEVE0001",
+      "text": "I'd say yes but Rob's call.",
+      "ts": "1793000120.000300",
+      "thread_ts": "1793000000.000100",
+      "parent_user_id": "U0BOTDEVLOG"
+    },
+    {
+      "type": "message",
+      "user": "U0ARUPH3T2M",
+      "text": "Yes, but waive it for the first rebook.",
+      "ts": "1793000180.000400",
+      "thread_ts": "1793000000.000100",
+      "parent_user_id": "U0BOTDEVLOG",
+      "files": [{ "id": "F0FILE00001", "name": "policy.pdf" }]
+    },
+    {
+      "type": "message",
+      "subtype": "thread_broadcast",
+      "user": "U0ARKEKJBLL",
+      "text": "Noted, going with that.",
+      "ts": "1793000240.000500",
+      "thread_ts": "1793000000.000100",
+      "parent_user_id": "U0BOTDEVLOG"
+    }
+  ],
+  "has_more": false,
+  "response_metadata": { "next_cursor": "" }
+}

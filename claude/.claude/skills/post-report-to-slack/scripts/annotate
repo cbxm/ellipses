@@ -49,11 +49,10 @@ def to_px(box, dpr):
     )
 
 
-def circle_bounds(rect, dpr, size):
+def circle_bounds(rect, dpr):
     """Ellipse round the element that clears its corners by the same margin on
     both axes, so a wide, short element gets a snug oval rather than one
-    stretched far past its ends. Clamped to the screenshot so no side of the
-    stroke is cut off."""
+    stretched far past its ends."""
     x0, y0, x1, y1 = rect
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     a, b = max((x1 - x0) / 2, 1.0), max((y1 - y0) / 2, 1.0)
@@ -66,14 +65,7 @@ def circle_bounds(rect, dpr, size):
         else:
             hi = d
     pad = hi + MARK_PAD * dpr
-    half = STROKE * dpr / 2
-    w, h = size
-    return (
-        max(cx - a - pad, half),
-        max(cy - b - pad, half),
-        min(cx + a + pad, w - half),
-        min(cy + b + pad, h - half),
-    )
+    return (cx - a - pad, cy - b - pad, cx + a + pad, cy + b + pad)
 
 
 def arrow_points(rect, dpr, frame):
@@ -139,7 +131,9 @@ def main():
     width = max(1, round(STROKE * dpr))
     marks = frame
     for spec in a.circle:
-        bounds = circle_bounds(to_px(resolve(spec, sidecar), dpr), dpr, img.size)
+        bounds = circle_bounds(to_px(resolve(spec, sidecar), dpr), dpr)
+        if bounds[0] < 0 or bounds[1] < 0 or bounds[2] > img.width or bounds[3] > img.height:
+            print(f"annotate: warning: circle {spec} runs off the screenshot edge and is cut; use --arrow", file=sys.stderr)
         draw.ellipse(bounds, outline=RED, width=width)
         marks = union(marks, bounds)
     for spec in a.arrow:

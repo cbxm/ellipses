@@ -147,23 +147,23 @@ circle round the new "Snap to open" toggle`). It is all a screen reader gets.
 Optional pieces, each with its trigger:
 
 - `--tag "<text>:<color>"` (gray, brown, purple, indigo, blue, green, yellow,
-  orange, red): a caveat the reader must not miss, such as `Behind flag:yellow`
+  orange, red; without a color suffix the whole string is the text): a caveat the reader must not miss, such as `Behind flag:yellow`
   or `Backend only:gray`. At most one; none is the usual case.
-- `--table <tsv>`: the change is to values or options (a default, a limit, a
+- `--table <file>`: the change is to values or options (a default, a limit, a
   list of choices). Tab-separated, header row first, normally
   `Setting<TAB>Before<TAB>After`. Use it with or without a screenshot, and
   instead of one when the change has no screen. Max 100 rows, 20 columns,
   10,000 characters.
-- `--chart <json>`: the change moved a measured number (p95 latency, error
+- `--chart <file>`: the change moved a measured number (p95 latency, error
   rate, cost). A `data_visualization` block, or an array of two: `title` ≤50
   chars, `chart.type` bar/line/area/pie, ≤12 series × ≤20 points, labels ≤20
   chars, every series has one point per `axis_config.categories` entry. Use
   real measurements only, and say where they came from in the thread. A bar
   chart with categories `Before` / `After` fits most cases.
 - `--collapse`: puts the technical paragraphs and OLD in a collapsed "How it
-  works" container on the card instead of the thread. A container has no
-  fallback field, so a client that cannot render it shows nothing; prefer
-  the thread, and use this only when the user asks for a single message.
+  works" container on the card instead of the thread. The container block is new
+  and untested on older clients; prefer the thread, and use this only when
+  the user asks for a single message.
 
 If Slack rejects a block, the error names the flag behind it; fix or drop
 that flag rather than retrying.

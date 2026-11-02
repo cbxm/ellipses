@@ -6,9 +6,9 @@
 //
 //   post.mjs --title <text> --body <file>
 //            [--task <url>] [--mr <url>] [--deploy <url>]
-//            [--author <name>] [--shipped <YYYY-MM-DD | unix seconds>]
+//            [--author <name>] [--shipped <YYYY-MM-DD | ISO 8601 time>]
 //            [--new <png> --new-alt <text>] [--old <png> --old-alt <text>]
-//            [--table <tsv>] [--chart <json>] [--tag "<text>[:<color>]"]
+//            [--table <tsv file>] [--chart <json file>] [--tag "<text>[:<color>]"]
 //            [--collapse] [--channel C0CCSDAS7NG] [--thread-ts <ts>] [--dry-run]
 //
 // The body is Slack mrkdwn, paragraphs separated by blank lines: the first
@@ -58,7 +58,7 @@ const { values: a } = parseArgs({
     'old-alt': { type: 'string' },
     table: { type: 'string' },
     chart: { type: 'string' },
-    tag: { type: 'string' },
+    tag: { type: 'string', multiple: true },
     collapse: { type: 'boolean', default: false },
     channel: { type: 'string', default: DEVLOG },
     'thread-ts': { type: 'string' },
@@ -68,6 +68,8 @@ const { values: a } = parseArgs({
 });
 
 if (!a.title) die('--title is required');
+if (a.tag?.length > 1) die('--tag given more than once; a card carries at most one tag');
+const tag = a.tag?.[0];
 if (!a.body) die('--body is required');
 if (a.title.length > 150) die(`--title is ${a.title.length} chars; Slack headers allow 150`);
 
@@ -89,6 +91,7 @@ for (const key of ['new', 'old']) {
   if (!a[key] || (key === 'new' && replyOnly)) continue;
   const s = await stat(a[key]).catch(() => null);
   if (!s?.isFile()) die(`--${key} ${a[key]} is not a file`);
+  if (a[`${key}-alt`] !== undefined && !a[`${key}-alt`].trim()) die(`--${key}-alt is empty`);
   if (!a[`${key}-alt`]) {
     console.error(`post: warning: no --${key}-alt; screen readers get only "${altFallback(key)}"`);
   }
@@ -113,16 +116,23 @@ function plain(mrkdwn) {
     .replace(/`/g, '');
 }
 
+// "<text>:<color>" when the part after the last colon is a tag color;
+// otherwise the whole string is the text.
 function parseTag(spec) {
   const i = spec.lastIndexOf(':');
   const color = i > 0 ? spec.slice(i + 1).trim() : '';
-  if (i > 0 && TAG_COLORS.includes(color)) return { text: spec.slice(0, i).trim(), color };
-  if (i > 0 && /^[a-z]+$/.test(color)) die(`--tag color "${color}" is not one of ${TAG_COLORS.join(', ')}`);
+  if (TAG_COLORS.includes(color)) return { text: spec.slice(0, i).trim(), color };
   return { text: spec.trim() };
 }
 
 async function readTable(path) {
-  const lines = (await readFile(path, 'utf8')).split('\n').filter((l) => l.trim());
+  let raw;
+  try {
+    raw = await readFile(path, 'utf8');
+  } catch (e) {
+    die(`--table ${path}: ${e.message}`);
+  }
+  const lines = raw.split('\n').filter((l) => l.trim());
   if (lines.length < 2) die(`--table ${path} needs a header row and at least one data row`);
   if (lines.length > 100) die(`--table has ${lines.length} rows; Slack allows 100`);
   const rows = lines.map((l) => l.split('\t').map((c) => c.trim()));
@@ -228,9 +238,10 @@ function mrMeta() {
   }
   if (meta.shipped) {
     // A bare date means local noon, so it renders as that day in any US zone.
-    const s = /^\d{4}-\d{2}-\d{2}$/.test(meta.shipped) ? `${meta.shipped}T12:00:00` : meta.shipped;
-    const t = /^\d+$/.test(s) ? Number(s) * 1000 : Date.parse(s);
-    if (Number.isNaN(t)) die(`--shipped "${meta.shipped}" is not a date`);
+    const bare = /^\d{4}-\d{2}-\d{2}$/.test(meta.shipped);
+    const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(meta.shipped);
+    const t = bare ? Date.parse(`${meta.shipped}T12:00:00`) : iso ? Date.parse(meta.shipped) : NaN;
+    if (Number.isNaN(t)) die(`--shipped "${meta.shipped}" is not YYYY-MM-DD or an ISO 8601 time`);
     const d = new Date(t);
     meta.unix = Math.floor(t / 1000);
     meta.fallback = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -238,11 +249,15 @@ function mrMeta() {
   return meta;
 }
 
+function escapeMrkdwn(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function metaLine(meta) {
   const parts = [];
   if (meta.repo) parts.push(`${meta.repo} !${meta.iid}`);
   if (meta.unix) parts.push(`shipped <!date^${meta.unix}^{date_short_pretty}|${meta.fallback}>`);
-  if (meta.author) parts.push(`by ${meta.author}`);
+  if (meta.author) parts.push(`by ${escapeMrkdwn(meta.author)}`);
   // Block Kit has no disabled button, so a missing link is listed as muted text.
   const missing = LINKS.filter(([k]) => !a[k]).map(([, label]) => label.replace(/^See /, ''));
   if (missing.length) parts.push(`${missing.join(', ')}: nothing linked`);
@@ -270,10 +285,10 @@ function cardBlocks({ newFileId, oldFileId, table, charts, meta }) {
   const out = [];
   const add = (from, block) => out.push({ from, block });
   add('--title', { type: 'header', text: { type: 'plain_text', text: a.title, emoji: true } });
-  if (a.tag) {
+  if (tag) {
     add('--tag', {
       type: 'rich_text',
-      elements: [{ type: 'rich_text_section', elements: [{ type: 'tag', ...parseTag(a.tag) }] }],
+      elements: [{ type: 'rich_text_section', elements: [{ type: 'tag', ...parseTag(tag) }] }],
     });
   }
   add('--body', { type: 'section', expand: true, text: { type: 'mrkdwn', text: lead } });
@@ -400,9 +415,16 @@ async function waitProcessed(id) {
   console.error(`post: warning: file ${id} still processing after 20s; posting anyway`);
 }
 
-// Indexes of the blocks an invalid_blocks error points at.
-function rejectedBlocks(err) {
-  return [...err.details.join(' ').matchAll(/\/blocks\/(\d+)/g)].map((m) => Number(m[1]));
+// The blocks an invalid_blocks error points at, followed through
+// child_blocks so an image inside the --collapse container resolves to the
+// image. `top` is the index of the enclosing top-level block.
+function rejectedBlocks(err, blocks) {
+  return [...err.details.join(' ').matchAll(/\/blocks\/\d+(?:\/child_blocks\/\d+)*/g)].map((m) => {
+    const [top, ...nested] = [...m[0].matchAll(/\d+/g)].map((n) => Number(n[0]));
+    let block = blocks[top];
+    for (const i of nested) block = block?.child_blocks?.[i];
+    return { top, block, nested: nested.length > 0 };
+  });
 }
 
 // Retries only rejections that can be a still-processing image; anything else
@@ -413,11 +435,12 @@ async function postWithRetry(payload, origins) {
       return await api('chat.postMessage', payload);
     } catch (e) {
       if (e.code !== 'invalid_blocks') throw e;
-      const idx = rejectedBlocks(e);
-      const types = idx.map((i) => payload.blocks[i]?.type);
-      const imageOnly = idx.length > 0 && types.every((t) => t === 'image');
+      const rejected = rejectedBlocks(e, payload.blocks);
+      const imageOnly = rejected.length > 0 && rejected.every((r) => r.block?.type === 'image');
       if (!imageOnly || attempt === 4) {
-        const flags = origins ? [...new Set(idx.map((i) => origins[i]).filter(Boolean))] : [];
+        // The only image nested in a container is OLD under --collapse.
+        const blame = (r) => (r.nested && r.block?.type === 'image' ? '--old' : origins?.[r.top]);
+        const flags = [...new Set(rejected.map(blame).filter(Boolean))];
         throw new Error(`${e.message}${flags.length ? `\nrejected block(s) come from ${flags.join(', ')}; drop or fix that flag` : ''}`);
       }
       await sleep(2000 * attempt);

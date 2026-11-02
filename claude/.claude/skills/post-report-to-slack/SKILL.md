@@ -21,7 +21,7 @@ the pin to an installed `chromium-<rev>` rather than downloading).
 Setup the scripts expect (they fail with instructions if missing):
 - `~/.config/x2u-devlog/prod-test-account.json` (chmod 600):
   `{"email": "...", "password": "..."}` for the prod test account.
-- `~/.config/x2u-devlog/bot-token` (chmod 600): the Caden Devlog bot's
+- `~/.config/x2u-devlog/bot-token` (chmod 600): the Caden's Bot app's
   `xoxb-` token. The app is defined by `slack-app-manifest.yaml` here and must
   be invited to #devlog.
 

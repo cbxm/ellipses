@@ -8,7 +8,7 @@ argument-hint: "send|wait|check|cancel"
 
 Rob owns X2U's business decisions: pricing, policy, what customers are told,
 which customer gets what. He is not an engineer. The question goes to #dev
-(`C0ASA6TH7QQ`, public) as a mention of him from the Caden Devlog bot, and he
+(`C0ASA6TH7QQ`, public) as a mention of him from Caden's Bot, and he
 answers in the thread.
 
 Script: `S=~/.claude/skills/ask-rob/scripts` then `node $S/ask-rob.mjs ...`.
@@ -93,10 +93,10 @@ became moot.
 
 ## Setup
 
-The bot is the Caden Devlog app (`post-report-to-slack/slack-app-manifest.yaml`;
+The bot is Caden's Bot (`post-report-to-slack/slack-app-manifest.yaml`;
 token in `~/.config/x2u-devlog/bot-token`). It needs `channels:history` to
 read replies and must be a member of #dev. `missing_scope` means the app has
 not been reinstalled since that scope was added; `not_in_channel` means
-`/invite @Caden Devlog` in #dev. The script says which.
+`/invite @Caden's Bot` in #dev. The script says which.
 
 Tests: `node --test ~/.claude/skills/ask-rob/test/*.test.mjs` (offline).

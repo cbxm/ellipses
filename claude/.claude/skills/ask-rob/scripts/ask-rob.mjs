@@ -95,7 +95,7 @@ function explain(e) {
       `paste the token into ${TOKEN_FILE} if it changed`;
   }
   if (e.code === 'not_in_channel' || e.code === 'channel_not_found') {
-    return `${e.message}. Invite the bot to #dev: /invite @Caden Devlog`;
+    return `${e.message}. Invite the bot to #dev: /invite @Caden's Bot`;
   }
   if (e.code === 'thread_not_found') {
     return `${e.message}: the question is gone from #dev (deleted?)`;

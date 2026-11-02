@@ -84,12 +84,6 @@ circle round it crosses the rows above and below). For OLD, mark where the
 change will appear. Never write OLD / NEW onto the images: the Slack captions
 say which is which.
 
-Customer phone numbers and names never go in a shot. The ai7 sidebar's
-Conversations list and conversation headers show them, even in the Review
-org: crop to the Agents list or a panel in the main pane, never the whole
-sidebar, and check the annotated PNG for any number that is not an agent's
-own before posting.
-
 ## Mode `old <MR>`
 
 1. The MR must be open and unmerged; if it already merged, prod may be serving

@@ -13,7 +13,7 @@ Caden's end-of-day status, posted to #dailies (Slack `C0BN8FRCZ9Q`) for the owne
 - **Manual**: draft, show it, post on approval.
 - `--dry-run` in either mode: print the draft, never post.
 
-Skip (and say why) if an end-of-day report for today already exists: any `M/D:` report message in #dailies after 15:00 Denver, whoever posted it (Caden, this routine, or a manual run). Morning "plan for today" posts don't count.
+Skip (and say why) if an end-of-day report for today already exists: any top-level `M/D:` report message in #dailies after 15:00 Denver, whoever posted it (Caden, this routine, or a manual run). Morning "plan for today" posts don't count.
 
 ## Gather
 
@@ -26,25 +26,46 @@ Let `D` = today in Denver (`TZ=America/Denver date +%F`) and `SINCE` = local mid
 2. **#weeklies** (`C0BSRJLAPGR`): items struck with today's date (`(MM/DD)`) are done. Use them to name the work in Caden's own words.
 3. **#support** (`C0CCN2S04RY`): if today's support report exists, one bullet summarising it (tickets handled, anything needing a human).
 
-Read MR titles and descriptions to understand what changed for customers; read the diff only if the description is useless.
+Read MR titles and descriptions to understand what changed, both for customers and technically; read the diff only if the description is useless.
 
 ## Write
 
-Match the house style exactly. Recent example:
+Two messages: a top-level post for the CEO, and a thread reply under it for the CTO.
+
+### Top-level: non-technical
+
+The CEO reads only this. Write it for someone who knows the customers and the product from the outside, not the code.
 
 ```
 10/24:
-• fixed slow `salon` booking tool connects. ~20ms now, was up to 28s. live.
-• canary fixes, live: AI can tell which texts staff sent, offered times show end time, slow Meevo logins no longer lock out a location.
-• monitored prod all day. healthy. one convo (4ae7a1bb) never got a reply; needs a human.
+• booking replies are fast again. the AI was sometimes waiting up to 28 seconds to reach the booking system; now it's instant. live.
+• a few fixes to how the AI texts: it can tell which messages staff sent, offered times now include an end time, and one slow login no longer locks out a whole location. live.
+• one customer conversation never got a reply; someone should follow up.
 ```
 
-- First line `M/D:` (no leading zeros, matching past posts). Then 3–7 `•` bullets. Nested `◦` only for a list of related fixes.
-- Lowercase, terse, outcome first, then status: `live`, `MR up`, `in progress`, `needs a human`, `waiting on <who>`.
-- Customer/business words, not code words. App names in backticks (`salon`, `ai7`) are fine; file names, function names, MR numbers are not.
-- Group related MRs into one bullet. Lead with what matters most to the owners.
-- Never invent work or health claims. Only what the sources show. Don't claim "monitored prod" unless there's evidence. If there's no activity at all, post nothing in scheduled mode and say so in the session output.
+- First line `M/D:` (no leading zeros). Then 3–7 `•` bullets. Lowercase and terse.
+- Each bullet is what changed for customers or the business, then where it stands: `live`, `ready, waiting on review`, `in progress`, `needs a human`, `waiting on <who>`.
+- No jargon at all: no app or repo names (`salon`, `ai7`), MR numbers, migrations, pipelines, deploys, models, or databases. Name customers (schools, salons) and features as the customer sees them. If an item can't be said without jargon, say what it means for customers, or leave it to the thread.
+- Group related work into one bullet. Lead with what matters most to the owners.
+- Never invent work or health claims; only what the sources show. Don't claim "monitored prod" without evidence. If there's no activity at all, post nothing in scheduled mode and say so in the session output.
+
+### Thread reply: technical
+
+The CTO reads this. Same items, same order, one bullet each, plus anything technical that didn't earn a top-level bullet. (Example below is illustrative; the MR numbers are made up.)
+
+```
+• salon!151: MCP connect latency, DO per session → stateless handler. merged, main pipeline green (deployed 14:02).
+• ai7!248/!249: staff-sent flag on outbound messages; slot end time in offers; Meevo login breaker per location. merged + deployed. migration 0091.
+• open: ai7!252 (draft), branch feat/bulk-tags pushed, no MR yet.
+```
+
+- `repo!iid` for every MR, as a link to it. Status from the sources: open / draft / merged / deployed / deploy failed (with the pipeline link).
+- One line of what changed technically and why (root cause, not just symptom). Call out migrations, flags, config, anything that needs care to ship, and anything blocked on review.
+- Support items: ticket link plus MR link.
 
 ## Post
 
-`slack_send_message` to `C0BN8FRCZ9Q`, top-level (not a thread). Return the message link.
+1. `slack_send_message` to `C0BN8FRCZ9Q`, top-level, with the non-technical message.
+2. `slack_send_message` to `C0BN8FRCZ9Q` with `thread_ts` set to the first message's ts, with the technical reply.
+
+If step 2 fails, retry once, then say so in the session output; don't repost the top level. Return both message links.

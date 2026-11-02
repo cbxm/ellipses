@@ -32,7 +32,9 @@ Take a builder's finished branch to an open PR/MR.
 
 7. **Watch CI** with the Monitor tool (or a single long-interval check), never a sleep loop. On GitLab the MR pipeline runs on `refs/merge-requests/<iid>/head`, NOT the branch: get its id from `glab api projects/<enc>/merge_requests/<iid>/pipelines` and poll `pipelines/<id>` + `pipelines/<id>/jobs`; a `--branch` filter finds nothing. On GitHub, `gh pr checks <n> --json name,bucket`. On failure: relay to the builder with the job log excerpt, then re-push. CI must be green before reporting done.
 
-8. **Report** the PR/MR URL and CI status to the user. Offer `/appa:fetch` for addressing review comments later.
+8. **Devlog.** If the MR has a user-visible `Screens:` change, run `/post-report-to-slack old <MR>` before it merges (prod still serves OLD only until then).
+
+9. **Report** the PR/MR URL and CI status to the user. Offer `/appa:fetch` for addressing review comments later.
 
 **Key requirements:**
 - Appa does not read the diff. The reviewer does.

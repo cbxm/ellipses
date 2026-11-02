@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""Crop a screenshot to a parent element and mark the change in red.
+
+  annotate in.png out.png [--crop BOX] [--circle BOX] [--arrow BOX] [--dpr N]
+
+BOX is a CSS-pixel box as JSON ({"x":..,"y":..,"width":..,"height":..}) or the
+word `parent` / `target`, read from in.png.boxes.json written by capture.mjs.
+The device pixel ratio comes from that file too, else --dpr (default 1).
+"""
+
+import argparse
+import json
+import math
+import sys
+from pathlib import Path
+
+from PIL import Image, ImageDraw
+
+RED = (230, 30, 30, 255)
+CROP_PAD = 16  # CSS px of context kept around the parent
+MARK_PAD = 8  # CSS px between the element and its circle
+STROKE = 4  # CSS px
+
+
+def die(msg):
+    print(f"annotate: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def resolve(spec, sidecar):
+    if spec in ("parent", "target"):
+        box = sidecar.get(f"{spec}Box")
+        if not box:
+            die(f"`{spec}` given but the .boxes.json has no {spec}Box")
+        return box
+    try:
+        box = json.loads(spec)
+        return {k: float(box[k]) for k in ("x", "y", "width", "height")}
+    except (ValueError, KeyError, TypeError):
+        die(f"bad box {spec!r}: want JSON with x, y, width, height, or parent/target")
+
+
+def to_px(box, dpr):
+    return (
+        box["x"] * dpr,
+        box["y"] * dpr,
+        (box["x"] + box["width"]) * dpr,
+        (box["y"] + box["height"]) * dpr,
+    )
+
+
+def circle_bounds(rect, dpr):
+    """Ellipse that passes outside the element's corners, not just its edges."""
+    x0, y0, x1, y1 = rect
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    rx = (x1 - x0) / 2 * math.sqrt(2) + MARK_PAD * dpr
+    ry = (y1 - y0) / 2 * math.sqrt(2) + MARK_PAD * dpr
+    return (cx - rx, cy - ry, cx + rx, cy + ry)
+
+
+def arrow_points(rect, dpr, frame):
+    """Tip, tail and head of an arrow pointing at the element from the side of
+    `frame` with the most room."""
+    fx0, fy0, fx1, fy1 = frame
+    x0, y0, x1, y1 = rect
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    gap = MARK_PAD * dpr
+    room = {"left": x0 - fx0, "right": fx1 - x1, "above": y0 - fy0, "below": fy1 - y1}
+    side = max(room, key=room.get)
+    length = min(80 * dpr, max(room[side] - gap * 2, 32 * dpr))
+    tip = {
+        "left": (x0 - gap, cy),
+        "right": (x1 + gap, cy),
+        "above": (cx, y0 - gap),
+        "below": (cx, y1 + gap),
+    }[side]
+    unit = {"left": (-1, 0), "right": (1, 0), "above": (0, -1), "below": (0, 1)}[side]
+    # Angle the shaft 30 degrees off the axis so it doesn't read as an underline.
+    ang = math.atan2(unit[1], unit[0]) + math.radians(30)
+    tail = (tip[0] + math.cos(ang) * length, tip[1] + math.sin(ang) * length)
+    head = 14 * dpr
+    back = math.atan2(tail[1] - tip[1], tail[0] - tip[0])
+    head_pts = [tip] + [
+        (tip[0] + math.cos(back + d) * head, tip[1] + math.sin(back + d) * head)
+        for d in (math.radians(28), math.radians(-28))
+    ]
+    return tip, tail, head_pts
+
+
+def union(a, b):
+    return (min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3]))
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("input")
+    p.add_argument("output")
+    p.add_argument("--crop")
+    p.add_argument("--circle", action="append", default=[])
+    p.add_argument("--arrow", action="append", default=[])
+    p.add_argument("--dpr", type=float)
+    a = p.parse_args()
+
+    sidecar_path = Path(a.input + ".boxes.json")
+    sidecar = json.loads(sidecar_path.read_text()) if sidecar_path.exists() else {}
+    dpr = a.dpr or sidecar.get("dpr") or 1.0
+
+    img = Image.open(a.input).convert("RGBA")
+    if sidecar.get("viewport"):
+        expected = round(sidecar["viewport"]["width"] * dpr)
+        if abs(img.width - expected) > 1:
+            die(f"image is {img.width}px wide but viewport x dpr is {expected}px; wrong --dpr or mismatched .boxes.json")
+
+    frame = (0, 0, img.width, img.height)
+    if a.crop:
+        pad = CROP_PAD * dpr
+        x0, y0, x1, y1 = to_px(resolve(a.crop, sidecar), dpr)
+        frame = (x0 - pad, y0 - pad, x1 + pad, y1 + pad)
+
+    draw = ImageDraw.Draw(img)
+    width = max(1, round(STROKE * dpr))
+    marks = frame
+    for spec in a.circle:
+        bounds = circle_bounds(to_px(resolve(spec, sidecar), dpr), dpr)
+        draw.ellipse(bounds, outline=RED, width=width)
+        marks = union(marks, bounds)
+    for spec in a.arrow:
+        tip, tail, head = arrow_points(to_px(resolve(spec, sidecar), dpr), dpr, frame)
+        draw.line((tail, tip), fill=RED, width=width)
+        draw.polygon(head, fill=RED)
+        xs = [tail[0]] + [q[0] for q in head]
+        ys = [tail[1]] + [q[1] for q in head]
+        marks = union(marks, (min(xs), min(ys), max(xs), max(ys)))
+
+    if a.crop:
+        # Grow the crop so no mark is cut off, staying inside the screenshot.
+        m = width
+        left, top = max(0, round(marks[0] - m)), max(0, round(marks[1] - m))
+        right, bottom = min(img.width, round(marks[2] + m)), min(img.height, round(marks[3] + m))
+        if right <= left or bottom <= top:
+            die("crop box lies outside the image")
+        img = img.crop((left, top, right, bottom))
+
+    img.convert("RGB").save(a.output)
+    print(a.output)
+
+
+if __name__ == "__main__":
+    main()

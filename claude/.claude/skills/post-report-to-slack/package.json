@@ -1,0 +1,9 @@
+{
+  "name": "post-report-to-slack",
+  "private": true,
+  "type": "module",
+  "description": "Scripts for the post-report-to-slack skill",
+  "dependencies": {
+    "playwright": "1.61.1"
+  }
+}

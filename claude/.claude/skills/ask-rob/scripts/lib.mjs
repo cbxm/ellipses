@@ -66,6 +66,12 @@ export function formatAnswers(answers) {
     .join('\n\n');
 }
 
+// Only failures that say nothing about the request are worth another poll:
+// HTTP and network errors and Slack outages. Anything else ends the wait.
+export const retryable = (e) => e instanceof SlackError && !e.fatal;
+
+export const isTs = (ts) => /^\d{10}(\.\d{1,6})?$/.test(String(ts));
+
 // "90s", "15m", "4h", or bare seconds -> milliseconds.
 export function parseDuration(s) {
   const m = /^(\d+(?:\.\d+)?)([smh]?)$/.exec(String(s).trim());
@@ -74,8 +80,8 @@ export function parseDuration(s) {
 }
 
 // Polls fetchMessages() until it yields an answer or timeoutMs passes.
-// A fetch that throws with .fatal set stops the wait; other errors are
-// reported through onError and retried on the next poll.
+// A retryable failure is reported through onError and polled again; any
+// other error stops the wait.
 export async function waitForAnswers(fetchMessages, threadTs, { since, timeoutMs, intervalMs, sleep, now = Date.now, onError }) {
   const deadline = now() + timeoutMs;
   for (;;) {
@@ -83,7 +89,7 @@ export async function waitForAnswers(fetchMessages, threadTs, { since, timeoutMs
       const answers = answersIn(await fetchMessages(), threadTs, since);
       if (answers.length) return answers;
     } catch (e) {
-      if (e.fatal) throw e;
+      if (!retryable(e)) throw e;
       onError?.(e);
     }
     const left = deadline - now();

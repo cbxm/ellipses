@@ -120,13 +120,13 @@ test('wait retries transient errors and stops on fatal ones', async () => {
   const rob = fixture.messages[3];
   let n = 0;
   const flaky = async () => {
-    if (n++ === 0) throw new Error('HTTP 503');
+    if (n++ === 0) throw new SlackError('conversations.replies', 'HTTP 503', { http: true });
     return [parent, rob];
   };
   const errors = [];
   const answers = await waitForAnswers(flaky, PARENT, { timeoutMs: 600_000, intervalMs: 60_000, ...clock(), onError: (e) => errors.push(e.message) });
   assert.deepEqual(answers.map((x) => x.who), ['Rob']);
-  assert.deepEqual(errors, ['HTTP 503']);
+  assert.deepEqual(errors, ['conversations.replies: HTTP 503']);
 
   const fatal = async () => { throw Object.assign(new Error('missing_scope'), { fatal: true }); };
   await assert.rejects(waitForAnswers(fatal, PARENT, { timeoutMs: 600_000, intervalMs: 60_000, ...clock() }), /missing_scope/);
@@ -185,4 +185,27 @@ test('wait retries Slack outages and rate limits, stops on permanent errors', as
     const gone = async () => { throw new SlackError('conversations.replies', code); };
     await assert.rejects(waitForAnswers(gone, PARENT, { timeoutMs: 600_000, intervalMs: 60_000, ...clock() }), new RegExp(code));
   }
+});
+
+test('wait exits 1 at once on a missing token, not 2 after the timeout', () => {
+  const home = newHome();
+  putState(home, 'pending', sent('no-show-fee'));
+  const r = cliIn(home, 'wait', 'no-show-fee', '--timeout', '30s', '--interval', '10s');
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /bot-token is missing/);
+});
+
+test('wait rejects a malformed --since before polling', () => {
+  const home = newHome();
+  putState(home, 'pending', sent('no-show-fee'));
+  for (const since of ['yesterday', '1793000180.0004x', '']) {
+    const r = cliIn(home, 'wait', 'no-show-fee', '--since', since, '--timeout', '30s', '--interval', '10s');
+    assert.equal(r.status, 1, since);
+    assert.match(r.stderr, /is not a Slack ts/);
+  }
+});
+
+test('wait stops on an error that is not a Slack outage', async () => {
+  const bug = async () => { throw new TypeError('x is undefined'); };
+  await assert.rejects(waitForAnswers(bug, PARENT, { timeoutMs: 600_000, intervalMs: 60_000, ...clock() }), TypeError);
 });

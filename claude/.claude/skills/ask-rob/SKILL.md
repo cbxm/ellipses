@@ -1,7 +1,7 @@
 ---
 name: ask-rob
 description: Ask Rob Thatcher (X2U/SalesComm business owner) a business, policy or customer question in Slack #dev through Caden's bot, then wait for his answer and resume. Use when work is blocked on a decision only Rob can make, or to check whether earlier questions to Rob have been answered.
-argument-hint: "send|wait|check|cancel"
+argument-hint: "send|wait|check|done|cancel"
 ---
 
 # ask-rob

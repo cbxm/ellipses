@@ -18,7 +18,7 @@ import { mkdir, readFile, readdir, rename, unlink, writeFile } from 'node:fs/pro
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { DEV, SlackError, answersIn, formatAnswers, parseDuration, questionPayload, waitForAnswers } from './lib.mjs';
+import { DEV, SlackError, answersIn, formatAnswers, isTs, parseDuration, questionPayload, waitForAnswers } from './lib.mjs';
 
 const TOKEN_FILE = join(homedir(), '.config/x2u-devlog/bot-token');
 const STATE = join(homedir(), 'src/x2u/.work/ask-rob');
@@ -62,13 +62,18 @@ async function api(method, params) {
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined) body.set(k, typeof v === 'string' ? v : JSON.stringify(v));
   }
-  const res = await fetch(`https://slack.com/api/${method}`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${token}` },
-    body,
-  });
+  let res, json;
+  try {
+    res = await fetch(`https://slack.com/api/${method}`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}` },
+      body,
+    });
+    if (res.ok) json = await res.json();
+  } catch (e) {
+    throw new SlackError(method, `network error: ${e.cause?.code ?? e.message}`, { http: true });
+  }
   if (!res.ok) throw new SlackError(method, `HTTP ${res.status}`, { http: true });
-  const json = await res.json();
   if (!json.ok) throw new SlackError(method, json.error, { needed: json.needed });
   return json;
 }
@@ -216,7 +221,9 @@ async function wait() {
     die(e.message);
   }
   if (intervalMs < 10_000) die('--interval under 10s would hit Slack rate limits');
+  if (a.since !== undefined && !isTs(a.since)) die(`--since ${a.since} is not a Slack ts (e.g. 1793000180.000400)`);
   const { q } = await load(id);
+  token ??= await readToken();
 
   const answers = await waitForAnswers(() => threadMessages(q.channel, q.ts), q.ts, {
     since: a.since,

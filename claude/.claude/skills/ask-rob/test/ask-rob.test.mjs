@@ -3,11 +3,11 @@
 // and wait loop against a recorded conversations.replies response.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { answersIn, formatAnswers, waitForAnswers } from '../scripts/lib.mjs';
+import { SlackError, answersIn, formatAnswers, waitForAnswers } from '../scripts/lib.mjs';
 
 const here = import.meta.dirname;
 const CLI = join(here, '../scripts/ask-rob.mjs');
@@ -17,10 +17,19 @@ const [parent, botFollowUp, steve] = fixture.messages;
 
 // HOME points at an empty dir so a run that got past the guards would fail on
 // the missing token instead of reaching Slack.
-function cli(...args) {
-  const home = mkdtempSync(join(tmpdir(), 'ask-rob-home-'));
+const newHome = () => mkdtempSync(join(tmpdir(), 'ask-rob-home-'));
+function cliIn(home, ...args) {
   return spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8', env: { ...process.env, HOME: home } });
 }
+
+const cli = (...args) => cliIn(newHome(), ...args);
+
+const stateDir = (home, dir) => join(home, 'src/x2u/.work/ask-rob', dir);
+function putState(home, dir, q) {
+  mkdirSync(stateDir(home, dir), { recursive: true });
+  writeFileSync(join(stateDir(home, dir), `${q.id}.json`), JSON.stringify(q));
+}
+const sent = (id) => ({ id, ts: PARENT, channel: 'C0ASA6TH7QQ', sent_at: '2026-11-02T00:00:00Z', context: null });
 
 function draft(text) {
   const dir = mkdtempSync(join(tmpdir(), 'ask-rob-'));
@@ -43,10 +52,13 @@ test('send refuses without --approved, before reading the token', () => {
   assert.match(r.stderr, /refusing to send without --approved/);
 });
 
-test('send with --approved gets past the guard (and stops at the missing token)', () => {
-  const r = cli('send', '--file', draft('Question?'), '--approved');
+test('send with --approved gets past the guard, and a missing token leaves no stub', () => {
+  const home = newHome();
+  const r = cliIn(home, 'send', '--file', draft('Question?'), '--approved');
   assert.equal(r.status, 1);
   assert.match(r.stderr, /bot-token is missing/);
+  assert.doesNotMatch(r.stderr, /may have posted/);
+  assert.ok(!existsSync(join(stateDir(home, 'pending'), 'no-show-fee.json')));
 });
 
 test('cancel refuses without --approved', () => {
@@ -118,4 +130,59 @@ test('wait retries transient errors and stops on fatal ones', async () => {
 
   const fatal = async () => { throw Object.assign(new Error('missing_scope'), { fatal: true }); };
   await assert.rejects(waitForAnswers(fatal, PARENT, { timeoutMs: 600_000, intervalMs: 60_000, ...clock() }), /missing_scope/);
+});
+
+test('send refuses while a stub from an interrupted send exists', () => {
+  const home = newHome();
+  putState(home, 'pending', { ...sent('no-show-fee'), ts: null });
+  const r = cliIn(home, 'send', '--file', draft('Question?'), '--approved');
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /may have posted.*Check #dev, then delete the stub/);
+});
+
+test('done moves a question to answered, and again is a no-op', () => {
+  const home = newHome();
+  putState(home, 'pending', sent('no-show-fee'));
+  for (let i = 0; i < 2; i++) {
+    const r = cliIn(home, 'done', 'no-show-fee');
+    assert.equal(r.status, 0, r.stderr);
+  }
+  assert.ok(!existsSync(join(stateDir(home, 'pending'), 'no-show-fee.json')));
+  assert.ok(existsSync(join(stateDir(home, 'answered'), 'no-show-fee.json')));
+});
+
+test('check reports each question\'s error and carries on', () => {
+  const home = newHome();
+  putState(home, 'pending', { ...sent('a-stub'), ts: null });
+  putState(home, 'pending', sent('b-real'));
+  const r = cliIn(home, 'check');
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /== a-stub\nerror: a-stub may have posted/);
+  assert.match(r.stdout, /== b-real\nerror: .*bot-token is missing/);
+  assert.match(r.stderr, /2 of 2 question\(s\) could not be checked/);
+});
+
+test('wait --since ignores replies already seen', async () => {
+  const [, , , rob, caden] = fixture.messages;
+  const answers = await waitForAnswers(poller([[parent, rob, caden]]).fetch, PARENT, { since: rob.ts, timeoutMs: 60_000, intervalMs: 60_000, ...clock() });
+  assert.deepEqual(answers.map((x) => x.who), ['Caden']);
+  const none = await waitForAnswers(poller([[parent, rob, caden]]).fetch, PARENT, { since: caden.ts, timeoutMs: 60_000, intervalMs: 60_000, ...clock() });
+  assert.equal(none, null);
+});
+
+test('wait retries Slack outages and rate limits, stops on permanent errors', async () => {
+  const rob = fixture.messages[3];
+  const outages = ['ratelimited', 'internal_error', 'service_unavailable', 'fatal_error'];
+  let n = 0;
+  const flaky = async () => {
+    if (n < outages.length) throw new SlackError('conversations.replies', outages[n++]);
+    return [parent, rob];
+  };
+  const answers = await waitForAnswers(flaky, PARENT, { timeoutMs: 3_600_000, intervalMs: 60_000, ...clock() });
+  assert.deepEqual(answers.map((x) => x.who), ['Rob']);
+
+  for (const code of ['thread_not_found', 'not_in_channel', 'missing_scope']) {
+    const gone = async () => { throw new SlackError('conversations.replies', code); };
+    await assert.rejects(waitForAnswers(gone, PARENT, { timeoutMs: 600_000, intervalMs: 60_000, ...clock() }), new RegExp(code));
+  }
 });

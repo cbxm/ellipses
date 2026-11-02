@@ -23,6 +23,9 @@ Meevo data, D1/Neon, docs or Slack history can answer, look up instead, and
 search Slack for whether he has already decided it. A technical choice is
 Caden's, not Rob's.
 
+Before drafting, ask Caden in the conversation first: he may know the answer,
+or prefer to ask Rob himself. Draft only once he says to.
+
 One message per decision. Related sub-questions go in the same message,
 numbered so he can answer `1. yes 2. no`.
 
@@ -50,22 +53,37 @@ edit after the OK needs a fresh OK. Never mention or DM Rob any other way.
 ```bash
 node $S/ask-rob.mjs send --file ~/src/x2u/.work/ask-rob/<id>.md --approved --context <task slug>
 node $S/ask-rob.mjs wait <id>            # --timeout 4h --interval 60s by default
+node $S/ask-rob.mjs done <id>            # once the question is settled
 ```
+
+`send` writes `pending/<id>.json` with `ts: null` before posting and fills it
+in after. If it dies in between, the question may or may not be in #dev, so
+`send` refuses to run again until someone has looked at #dev and deleted the
+stub. Never delete it without looking.
 
 Run `wait` with Bash `run_in_background`, so the session is re-invoked when it
 exits, and carry on with anything that does not depend on the answer. Exit 0
 prints the replies from Rob, and from Caden (labelled), who may answer instead;
-exit 2 is a timeout. Other people's replies and the bot's own are ignored. On
-exit 2, tell the user and leave it pending; don't re-ask or nudge Rob.
+exit 2 is a timeout. Other people's replies and the bot's own are ignored.
 
-A reply answers only what it says. If it is ambiguous or covers half the
-question, bring it to the user rather than reading it as a decision.
+A reply answers only what it says. "Let me check" or half an answer is not a
+decision: bring it to the user, and wait again with the `--since <ts>` that
+`wait` prints so old replies don't count. Nothing leaves `pending/` until
+`done <id>`, run when the user and you agree it is answered.
+
+On a timeout or a long silence, read #dev around the question's permalink
+with the Slack MCP (`slack_read_channel` / `slack_read_thread`): Rob may have
+answered top-level instead of in the thread, or with just a reaction, which
+the script cannot see. Tell the user either way; don't re-ask or nudge Rob.
 
 ## Later sessions
 
-`node $S/ask-rob.mjs check` lists every pending question with any replies
-that have arrived, and moves answered ones to `answered/`. `check <id>` looks
-at one. Run it at the start of a session that may have asked Rob something.
+`node $S/ask-rob.mjs check` lists every pending question with all its replies
+so far, so an answer a backgrounded `wait` printed into a finished session is
+not lost. `check <id>` looks at one. A question that fails (deleted thread,
+interrupted send) is reported and the rest are still checked. Run it at the
+start of a session that may have asked Rob something, then `done` the settled
+ones.
 
 ## Cancel
 

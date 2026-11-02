@@ -7,6 +7,21 @@ export const ANSWERERS = { [ROB]: 'Rob', [CADEN]: 'Caden' };
 
 const MAX_BODY = 3000;
 
+// Slack errors that say nothing about the request itself and clear on retry.
+const TRANSIENT = new Set(['internal_error', 'service_unavailable', 'fatal_error', 'ratelimited', 'request_timeout']);
+
+export class SlackError extends Error {
+  constructor(method, code, { needed, http = false } = {}) {
+    super(`${method}: ${code}`);
+    this.method = method;
+    this.code = code;
+    this.needed = needed;
+    // HTTP and network failures and Slack's own outages are retried by wait;
+    // any other ok:false answer (bad scope, channel, ts) is permanent.
+    this.fatal = !http && !TRANSIENT.has(code);
+  }
+}
+
 // The question as posted: a mention of Rob, who is asking, the body, and how to answer.
 export function questionPayload(body, channel = DEV) {
   const question = body.trim();
@@ -23,11 +38,12 @@ export function questionPayload(body, channel = DEV) {
 }
 
 // Replies in a conversations.replies message list that answer the question:
-// messages from Rob or Caden other than the thread parent. The bot's own
-// messages, and anyone else's, are not answers.
-export function answersIn(messages, threadTs) {
+// messages from Rob or Caden other than the thread parent, and newer than
+// `since` when given. The bot's own messages, and anyone else's, are not answers.
+export function answersIn(messages, threadTs, since) {
   return messages
     .filter((m) => m.ts !== threadTs && !m.bot_id && ANSWERERS[m.user])
+    .filter((m) => !since || tsKey(m.ts) > tsKey(since))
     .map((m) => ({
       who: ANSWERERS[m.user],
       user: m.user,
@@ -36,6 +52,9 @@ export function answersIn(messages, threadTs) {
       files: m.files?.length ?? 0,
     }));
 }
+
+// Slack ts strings ("1793000180.000400") as exact integers; too many digits for a float.
+const tsKey = (ts) => BigInt(String(ts).replace('.', '').padEnd(16, '0'));
 
 export function formatAnswers(answers) {
   return answers
@@ -57,11 +76,11 @@ export function parseDuration(s) {
 // Polls fetchMessages() until it yields an answer or timeoutMs passes.
 // A fetch that throws with .fatal set stops the wait; other errors are
 // reported through onError and retried on the next poll.
-export async function waitForAnswers(fetchMessages, threadTs, { timeoutMs, intervalMs, sleep, now = Date.now, onError }) {
+export async function waitForAnswers(fetchMessages, threadTs, { since, timeoutMs, intervalMs, sleep, now = Date.now, onError }) {
   const deadline = now() + timeoutMs;
   for (;;) {
     try {
-      const answers = answersIn(await fetchMessages(), threadTs);
+      const answers = answersIn(await fetchMessages(), threadTs, since);
       if (answers.length) return answers;
     } catch (e) {
       if (e.fatal) throw e;

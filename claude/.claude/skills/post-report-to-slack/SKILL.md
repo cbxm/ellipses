@@ -123,18 +123,50 @@ not the text.
 ```bash
 node $S/post.mjs --title "<title>" --body $DIR/body.md \
   --task <issue url> --mr <mr url> --deploy <pipeline url> \
-  --old $DIR/old-annotated.png --new $DIR/new-annotated.png --dry-run
+  --new $DIR/new-annotated.png --new-alt "<what NEW shows, where the mark is>" \
+  --old $DIR/old-annotated.png --old-alt "<what OLD shows, where the mark is>" \
+  --dry-run
 ```
 
-Drop `--dry-run` for the real post. The channel message holds the header,
-paragraph 1, See Task / See MR / See Deployment buttons and the NEW image; a
-thread reply holds the technical paragraphs and the OLD image, so the channel
-reads as what changed and the thread as how. A link left out is listed as
-muted "nothing linked" text (Block Kit has no disabled button). An image left
-out is skipped; with no technical paragraphs and no OLD there is no thread
-reply. It prints the card's permalink.
+Drop `--dry-run` for the real post. The card holds the header, paragraph 1,
+See Task / See MR / See Deployment buttons, a muted line (repo and MR number,
+ship date, author, and any link that is missing as "nothing linked", since
+Block Kit has no disabled button) and the NEW image. A thread reply holds the
+technical paragraphs and the OLD image, so the channel reads as what changed
+and the thread as how. Author and ship date come from the MR via glab;
+`--author` / `--shipped` override. Images left out are skipped; with no
+technical paragraphs and no OLD there is no thread reply. It prints the
+card's permalink.
+
+Always write `--new-alt` / `--old-alt`: one plain sentence saying which screen
+it is and what the red mark points at (`Agent settings, Quiet hours card;
+circle round the new "Snap to open" toggle`). It is all a screen reader gets.
+
+Optional pieces, each with its trigger:
+
+- `--tag "<text>:<color>"` (gray, brown, purple, indigo, blue, green, yellow,
+  orange, red): a caveat the reader must not miss, such as `Behind flag:yellow`
+  or `Backend only:gray`. At most one; none is the usual case.
+- `--table <tsv>`: the change is to values or options (a default, a limit, a
+  list of choices). Tab-separated, header row first, normally
+  `Setting<TAB>Before<TAB>After`. Use it with or without a screenshot, and
+  instead of one when the change has no screen. Max 100 rows, 20 columns,
+  10,000 characters.
+- `--chart <json>`: the change moved a measured number (p95 latency, error
+  rate, cost). A `data_visualization` block, or an array of two: `title` ≤50
+  chars, `chart.type` bar/line/area/pie, ≤12 series × ≤20 points, labels ≤20
+  chars, every series has one point per `axis_config.categories` entry. Use
+  real measurements only, and say where they came from in the thread. A bar
+  chart with categories `Before` / `After` fits most cases.
+- `--collapse`: puts the technical paragraphs and OLD in a collapsed "How it
+  works" container on the card instead of the thread. A container has no
+  fallback field, so a client that cannot render it shows nothing; prefer
+  the thread, and use this only when the user asks for a single message.
+
+If Slack rejects a block, the error names the flag behind it; fix or drop
+that flag rather than retrying.
 
 Exit 1 with a permalink printed = the card is up but its thread reply failed;
 re-run with `--thread-ts <ts>` (printed on stderr), never re-run the whole
-post. If the bot cannot post, the Slack MCP
-is the fallback for reading the channel; do not repost as the user.
+post. If the bot cannot post, the Slack MCP is the fallback for reading the
+channel; do not repost as the user.

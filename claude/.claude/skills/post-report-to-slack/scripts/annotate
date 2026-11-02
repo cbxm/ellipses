@@ -49,13 +49,31 @@ def to_px(box, dpr):
     )
 
 
-def circle_bounds(rect, dpr):
-    """Ellipse that passes outside the element's corners, not just its edges."""
+def circle_bounds(rect, dpr, size):
+    """Ellipse round the element that clears its corners by the same margin on
+    both axes, so a wide, short element gets a snug oval rather than one
+    stretched far past its ends. Clamped to the screenshot so no side of the
+    stroke is cut off."""
     x0, y0, x1, y1 = rect
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    rx = (x1 - x0) / 2 * math.sqrt(2) + MARK_PAD * dpr
-    ry = (y1 - y0) / 2 * math.sqrt(2) + MARK_PAD * dpr
-    return (cx - rx, cy - ry, cx + rx, cy + ry)
+    a, b = max((x1 - x0) / 2, 1.0), max((y1 - y0) / 2, 1.0)
+    # Smallest d with the corner (a, b) inside the ellipse of semi-axes (a+d, b+d).
+    lo, hi = 0.0, max(a, b) * (math.sqrt(2) - 1) + 1
+    for _ in range(50):
+        d = (lo + hi) / 2
+        if (a / (a + d)) ** 2 + (b / (b + d)) ** 2 > 1:
+            lo = d
+        else:
+            hi = d
+    pad = hi + MARK_PAD * dpr
+    half = STROKE * dpr / 2
+    w, h = size
+    return (
+        max(cx - a - pad, half),
+        max(cy - b - pad, half),
+        min(cx + a + pad, w - half),
+        min(cy + b + pad, h - half),
+    )
 
 
 def arrow_points(rect, dpr, frame):
@@ -121,7 +139,7 @@ def main():
     width = max(1, round(STROKE * dpr))
     marks = frame
     for spec in a.circle:
-        bounds = circle_bounds(to_px(resolve(spec, sidecar), dpr), dpr)
+        bounds = circle_bounds(to_px(resolve(spec, sidecar), dpr), dpr, img.size)
         draw.ellipse(bounds, outline=RED, width=width)
         marks = union(marks, bounds)
     for spec in a.arrow:

@@ -79,8 +79,16 @@ outside the viewport means the crop will be cut: use a taller viewport.
 Read the annotated PNG before going on. Crop to the parent that gives context
 (the whole modal, the tab panel, the settings card), never the whole page. Put
 a red circle round the change, or an arrow (`--arrow target`) when it is small
-or new and has no old counterpart. For OLD, mark where the change will appear.
-Never write OLD / NEW onto the images: the Slack captions say which is which.
+or new and has no old counterpart, or a full-width row in a dense list (a
+circle round it crosses the rows above and below). For OLD, mark where the
+change will appear. Never write OLD / NEW onto the images: the Slack captions
+say which is which.
+
+Customer phone numbers and names never go in a shot. The ai7 sidebar's
+Conversations list and conversation headers show them, even in the Review
+org: crop to the Agents list or a panel in the main pane, never the whole
+sidebar, and check the annotated PNG for any number that is not an agent's
+own before posting.
 
 ## Mode `old <MR>`
 

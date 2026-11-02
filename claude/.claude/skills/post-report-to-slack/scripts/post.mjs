@@ -4,11 +4,13 @@
 //
 //   post.mjs --title <text> --body <file> [--task <url>] [--mr <url>]
 //            [--deploy <url>] [--new <png>] [--old <png>]
-//            [--channel C0CCSDAS7NG] [--dry-run]
+//            [--channel C0CCSDAS7NG] [--thread-ts <ts>] [--dry-run]
 //
 // The body is Slack mrkdwn, paragraphs separated by blank lines: the first
 // goes in the channel, up to two more go in the thread. --dry-run prints both
 // payloads and touches nothing. A real post prints the card's permalink.
+// --thread-ts posts only the thread reply under an existing card, for when the
+// card went up but its reply failed.
 
 import { readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -40,6 +42,7 @@ const { values: a } = parseArgs({
     new: { type: 'string' },
     old: { type: 'string' },
     channel: { type: 'string', default: DEVLOG },
+    'thread-ts': { type: 'string' },
     'dry-run': { type: 'boolean', default: false },
   },
   strict: true,
@@ -58,8 +61,11 @@ if (paragraphs.length > 3) die(`${a.body} has ${paragraphs.length} paragraphs; t
 const [lead, ...technical] = paragraphs;
 for (const p of paragraphs) if (p.length > 3000) die('a paragraph is over Slack\'s 3000-char section limit');
 
+const replyOnly = a['thread-ts'];
+if (replyOnly && technical.length === 0 && !a.old) die('--thread-ts given but there is no thread reply to post');
+
 for (const key of ['new', 'old']) {
-  if (!a[key]) continue;
+  if (!a[key] || (key === 'new' && replyOnly)) continue;
   const s = await stat(a[key]).catch(() => null);
   if (!s?.isFile()) die(`--${key} ${a[key]} is not a file`);
 }
@@ -107,14 +113,14 @@ function payloads(newFileId, oldFileId) {
   const card = { channel: a.channel, text: a.title, unfurl_links: false, blocks: cardBlocks(newFileId) };
   const blocks = threadBlocks(oldFileId);
   const thread = blocks.length
-    ? { channel: a.channel, thread_ts: '<card ts>', text: `${a.title}: details`, unfurl_links: false, blocks }
+    ? { channel: a.channel, thread_ts: a['thread-ts'] ?? '<card ts>', text: `${a.title}: details`, unfurl_links: false, blocks }
     : null;
   return { card, thread };
 }
 
 if (a['dry-run']) {
   const { card, thread } = payloads(a.new && `<upload of ${a.new}>`, a.old && `<upload of ${a.old}>`);
-  console.log(JSON.stringify({ card, thread }, null, 2));
+  console.log(JSON.stringify(replyOnly ? { thread } : { card, thread }, null, 2));
   process.exit(0);
 }
 
@@ -187,18 +193,19 @@ async function postWithRetry(payload) {
 }
 
 try {
-  const newId = a.new ? await upload(a.new, `After: ${a.title}`) : null;
+  const newId = a.new && !replyOnly ? await upload(a.new, `After: ${a.title}`) : null;
   const oldId = a.old ? await upload(a.old, `Before: ${a.title}`) : null;
   for (const id of [newId, oldId]) if (id) await waitProcessed(id);
 
   const { card, thread } = payloads(newId, oldId);
-  const posted = await postWithRetry(card);
+  const posted = replyOnly ? { channel: a.channel, ts: replyOnly } : await postWithRetry(card);
   const { permalink } = await api('chat.getPermalink', { channel: posted.channel, message_ts: posted.ts });
   if (thread) {
     try {
       await postWithRetry({ ...thread, thread_ts: posted.ts });
     } catch (e) {
-      console.error(`post: card posted but the thread reply failed: ${e.message}`);
+      console.error(`post: card is up but the thread reply failed: ${e.message}`);
+      console.error(`post: re-run with --thread-ts ${posted.ts} to post only the reply`);
       console.log(permalink);
       process.exit(1);
     }

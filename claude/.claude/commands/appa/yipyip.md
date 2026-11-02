@@ -28,11 +28,11 @@ Take a builder's finished branch to an open PR/MR.
    git -C <worktree> push -u origin <branch>
    ~/.claude/skills/forge/scripts/detect.sh   # github | gitlab
    ```
-   GitHub: `gh pr create --title … --body …`. GitLab: `glab mr create --title … --description … --remove-source-branch`. Body: 2–3 summary bullets from the builder's report, a Test Plan checklist, and the issue reference if there is one. Never a Claude Code footer.
+   GitHub: `gh pr create --title … --body …`. GitLab: `glab mr create --title … --description … --remove-source-branch`. Body: 2–3 summary bullets from the builder's report, a Test Plan checklist, the issue reference if there is one, and for a GitLab MR a `Screens: <url under https://app.x2u.ai/ai7> — <element that shows the change>` line written from the diff and builder report, or `Screens: none` when nothing user-visible changed. Never a Claude Code footer.
 
 7. **Watch CI** with the Monitor tool (or a single long-interval check), never a sleep loop. On GitLab the MR pipeline runs on `refs/merge-requests/<iid>/head`, NOT the branch: get its id from `glab api projects/<enc>/merge_requests/<iid>/pipelines` and poll `pipelines/<id>` + `pipelines/<id>/jobs`; a `--branch` filter finds nothing. On GitHub, `gh pr checks <n> --json name,bucket`. On failure: relay to the builder with the job log excerpt, then re-push. CI must be green before reporting done.
 
-8. **Devlog.** If the MR has a user-visible `Screens:` change, run `/post-report-to-slack old <MR>` before it merges (prod still serves OLD only until then).
+8. **Devlog.** If `Screens:` is not `none`, run `/post-report-to-slack old <MR>` before it merges (prod serves OLD only until then).
 
 9. **Report** the PR/MR URL and CI status to the user. Offer `/appa:fetch` for addressing review comments later.
 

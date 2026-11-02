@@ -10,7 +10,7 @@
 // `text=Save`. --aria prints an aria snapshot (of --parent, else the page).
 // The last stdout line is {url, viewport, dpr, parentBox, targetBox} as JSON;
 // with --out the same JSON is written to <out>.boxes.json for `annotate`.
-// A --url under /auth/login is shown signed out, without signing in.
+// A --url under /auth/login is shown signed out: no cached session, no sign-in.
 
 import { chromium } from 'playwright';
 import { readFile, writeFile, mkdir, stat, chmod } from 'node:fs/promises';
@@ -124,18 +124,18 @@ async function box(page, sel, name) {
   return out;
 }
 
+const wantLogin = isLogin(url);
 const browser = await chromium.launch();
 try {
   const context = await browser.newContext({
     viewport,
     deviceScaleFactor: dpr,
-    storageState: (await exists(STATE)) ? STATE : undefined,
+    storageState: !wantLogin && (await exists(STATE)) ? STATE : undefined,
   });
   context.setDefaultTimeout(timeout);
   const page = await context.newPage();
 
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  const wantLogin = isLogin(url);
   if (isLogin(page.url()) && !wantLogin) {
     await signIn(page, context);
     if (page.url() !== url) await page.goto(url, { waitUntil: 'domcontentloaded' });

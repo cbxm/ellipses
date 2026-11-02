@@ -132,5 +132,9 @@ thread reply holds the technical paragraphs and the OLD image, so the channel
 reads as what changed and the thread as how. A link left out is listed as
 muted "nothing linked" text (Block Kit has no disabled button). An image left
 out is skipped; with no technical paragraphs and no OLD there is no thread
-reply. It prints the card's permalink. If the bot cannot post, the Slack MCP
+reply. It prints the card's permalink.
+
+Exit 1 with a permalink printed = the card is up but its thread reply failed;
+re-run with `--thread-ts <ts>` (printed on stderr), never re-run the whole
+post. If the bot cannot post, the Slack MCP
 is the fallback for reading the channel; do not repost as the user.

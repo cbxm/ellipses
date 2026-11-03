@@ -52,16 +52,17 @@ branded "Hair Salon Academy". The Review Demo Agent has Salon on, pointed at
 that location, with Salon prompt blocks, so salon changes that show up in ai7
 (tool chips, booking replies) can be captured in a "Yourself" web chat.
 "Pull services" fails there, as expected. The seeded roster lasts 90 days.
-If the shots look stale or availability errors, reseed from the salon repo
-with Node 22 (this wipes demo bookings and guests):
+It was seeded with no `--auto-approve` and no `--guest`, so bookings wait for
+staff approval. A reset re-applies only the flags given, so keep it that way.
+If availability errors or the roster has run out, reseed from the salon repo
+with Node 22. This wipes everything on the location, including console edits
+made for an `old` shot, so never reseed between `old` and `new`:
 
 ```bash
 DATABASE_URL=<salon prod> npx tsx scripts/demo-location.ts \
   --org 3VzxQ5JfacMR4h9Sgky0c74EqBpvbWYe \
-  --location 8NEjn5DnNEhLBIq95eK59XAuiZOdx5FU --org-name Review
+  --location 8NEjn5DnNEhLBIq95eK59XAuiZOdx5FU
 ```
-
-Then pause and resume the `appointments` feed on Readiness (`/salon/`).
 
 ## 2. Capture
 

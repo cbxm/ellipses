@@ -36,7 +36,7 @@ site. Name the directory in your report.
 
 Resolve the MR with glab (`glab mr view <iid> -R x2u/<repo> -F json`). Read
 its description for a `Screens:` line: a URL under `https://app.x2u.ai/ai7`
-and the element that shows the change, or `none`. Without one, work out the
+or `https://app.x2u.ai/salon` and the element that shows the change, or `none`. Without one, work out the
 screen from the diff (routes and components touched) and confirm it with the
 user. A backend-only change or `Screens: none` gets no images; say so in the
 post.
@@ -44,6 +44,24 @@ post.
 The seeded Review org has one "Review Demo Agent" and one web conversation to
 point at. Anything else the screen needs, set up as the test account would,
 and leave it there. Never touch real customer data.
+
+Salon screens (`/salon/...`) show Review's demo location
+`8NEjn5DnNEhLBIq95eK59XAuiZOdx5FU`, which is the Archway salon instance id.
+It is seeded with fixture services, stylists and guests, and its content is
+branded "Hair Salon Academy". The Review Demo Agent has Salon on, pointed at
+that location, with Salon prompt blocks, so salon changes that show up in ai7
+(tool chips, booking replies) can be captured in a "Yourself" web chat.
+"Pull services" fails there, as expected. The seeded roster lasts 90 days.
+If the shots look stale or availability errors, reseed from the salon repo
+with Node 22 (this wipes demo bookings and guests):
+
+```bash
+DATABASE_URL=<salon prod> npx tsx scripts/demo-location.ts \
+  --org 3VzxQ5JfacMR4h9Sgky0c74EqBpvbWYe \
+  --location 8NEjn5DnNEhLBIq95eK59XAuiZOdx5FU --org-name Review
+```
+
+Then pause and resume the `appointments` feed on Readiness (`/salon/`).
 
 ## 2. Capture
 

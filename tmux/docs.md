@@ -22,6 +22,9 @@ Path: @/tmux
 **New windows open in the current pane's directory**
 `w` passes `-c "#{pane_current_path}"` like the splits do. Without it, new windows open in the session's start directory (wherever `tmux new` ran — `~` for Ghostty's `0main`), which is rarely where you're working.
 
+**`prefix M-y` opens a window running `ccyo`**
+It types `ccyo` into a normal shell with `send-keys`, rather than passing it as the window's command. That runs it in an interactive fish, exactly as if typed, and the shell stays after Claude exits. As a window command, the window would close on exit and take the `claude --resume` hint and any crash output with it.
+
 **Window navigation: n/m**
 `n` = previous, `m` = next. Adjacent keys, easy to hit repeatedly.
 

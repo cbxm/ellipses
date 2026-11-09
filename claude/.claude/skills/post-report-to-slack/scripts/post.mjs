@@ -18,15 +18,14 @@
 // with glab. --dry-run prints the payloads and posts nothing. A real post
 // prints the card's permalink. --thread-ts posts only the thread reply under
 // an existing card, for when the card went up but its reply failed.
+// A real post to #devlog for an x2u MR writes {permalink, ts} to the MR's
+// devlog dir as posted.json, which the sweep reads as done.
 
 import { execFileSync } from 'node:child_process';
-import { readFile, stat } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { parseArgs } from 'node:util';
-
-const TOKEN_FILE = join(homedir(), '.config/x2u-devlog/bot-token');
-const DEVLOG = 'C0CCSDAS7NG';
+import { DEVLOG_CHANNEL as DEVLOG, TOKEN_FILE, devlogDir, x2uRepo } from './lib.mjs';
 const LINKS = [
   ['task', 'See Task'],
   ['mr', 'See MR'],
@@ -373,6 +372,18 @@ class SlackError extends Error {
   }
 }
 
+// Marks the MR as posted for the sweep. A failed thread reply is recorded
+// too: the card is up, so the sweep must not post it again.
+async function recordPosted(permalink, ts, threadFailed) {
+  const m = a.mr && /^https:\/\/[^/]+\/(.+?)\/-\/merge_requests\/(\d+)/.exec(a.mr);
+  const repo = m && x2uRepo(m[1]);
+  if (!repo || a.channel !== DEVLOG) return;
+  const dir = devlogDir(repo, m[2]);
+  await mkdir(dir, { recursive: true });
+  const record = { permalink, ts, ...(threadFailed ? { thread_failed: true } : {}) };
+  await writeFile(join(dir, 'posted.json'), JSON.stringify(record, null, 2) + '\n');
+}
+
 async function api(method, params) {
   const body = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
@@ -463,10 +474,12 @@ try {
     } catch (e) {
       console.error(`post: card is up but the thread reply failed: ${e.message}`);
       console.error(`post: re-run with --thread-ts ${posted.ts} to post only the reply`);
+      await recordPosted(permalink, posted.ts, true);
       console.log(permalink);
       process.exit(1);
     }
   }
+  await recordPosted(permalink, posted.ts, false);
   console.log(permalink);
 } catch (e) {
   die(e.message);

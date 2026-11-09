@@ -85,8 +85,9 @@ if (paragraphs.length > 3) die(`${a.body} has ${paragraphs.length} paragraphs; t
 const [lead, ...technical] = paragraphs;
 for (const p of paragraphs) if (p.length > 3000) die("a paragraph is over Slack's 3000-char section limit");
 
-const mr = a.mr ? mrRef(a.mr, a.repo) : null;
-if (a.mr && !mr && !/^https?:\/\//.test(a.mr)) die(`--mr ${a.mr} needs -R x2u/<repo> (one of ai7, salon, admick, gcal), or pass the MR url`);
+// Any x2u repo can post; REPOS limits only the merge gate and the sweep.
+const mr = a.mr ? mrRef(a.mr, a.repo, { any: true }) : null;
+if (a.mr && !mr && !/^https?:\/\//.test(a.mr)) die(`--mr ${a.mr} needs -R x2u/<repo>, or pass the MR url`);
 if (mr) a.mr = mrUrl(mr.repo, mr.iid);
 if (a.channel === DEVLOG && !mr) {
   die('a #devlog post needs --mr with an x2u MR (url, or !iid with -R x2u/<repo>); its posted.json is what marks the MR done');

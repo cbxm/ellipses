@@ -19,18 +19,19 @@ export function devlogDir(repo, iid) {
 }
 
 // The x2u repo named by a remote, -R value or MR url: `x2u/ai7`,
-// `https://gitlab.com/x2u/ai7`, `git@gitlab.com:x2u/ai7.git`. Null otherwise.
-export function x2uRepo(ref) {
+// `https://gitlab.com/x2u/ai7`, `git@gitlab.com:x2u/ai7.git`. Null otherwise,
+// and null for a repo outside REPOS unless `any` is set.
+export function x2uRepo(ref, { any = false } = {}) {
   const m = /(?:^|[/:])x2u\/([\w.-]+?)(?:\.git)?(?:\/|$)/.exec(ref ?? '');
-  return m && REPOS.includes(m[1]) ? m[1] : null;
+  return m && (any || REPOS.includes(m[1])) ? m[1] : null;
 }
 
 // {repo, iid} from an x2u MR url, or from `!iid` / `iid` plus a repo ref.
-export function mrRef(mr, repoRef) {
+export function mrRef(mr, repoRef, opts) {
   const url = /^https?:\/\/[^/]+\/(.+?)\/-\/merge_requests\/(\d+)/.exec(mr ?? '');
-  if (url) return x2uRepo(url[1]) ? { repo: x2uRepo(url[1]), iid: url[2] } : null;
+  if (url) return x2uRepo(url[1], opts) ? { repo: x2uRepo(url[1], opts), iid: url[2] } : null;
   const n = /^!?(\d+)$/.exec(mr ?? '');
-  const repo = repoRef && x2uRepo(repoRef);
+  const repo = repoRef && x2uRepo(repoRef, opts);
   return n && repo ? { repo, iid: n[1] } : null;
 }
 

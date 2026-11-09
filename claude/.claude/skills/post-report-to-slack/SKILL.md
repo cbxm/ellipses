@@ -146,6 +146,11 @@ Run by the devlog routine; also fine by hand.
 node $S/sweep.mjs   # JSON {cutoff, pending, needs_screen, waiting, skipped}; read-only
 ```
 
+It covers only MRs authored by the glab-authenticated user (resolved with
+`glab api user` each run); other authors' MRs are their own pipeline's job
+(Steve's post from his "Steve's Assistant" app), and the #devlog check below
+stays as the backstop against a double post.
+
 It lists MRs in x2u/{ai7,salon,admick,gcal} merged after its `CUTOFF`
 (no backfill), whose Screens is not `none`, with no `posted.json`, no card in
 #devlog already linking them, fewer than 3 recorded failures, and a live deploy (`deploy:production` and,

@@ -4,6 +4,7 @@
 //   sweep.mjs [--dry-run]
 //       Prints JSON {cutoff, pending, needs_screen, waiting, skipped}.
 //       Read-only (it reads #devlog history with the bot).
+//       Covers only MRs authored by the glab-authenticated user.
 //       pending: merged after CUTOFF, Screens set, deployed to prod, no
 //                posted.json, no card in #devlog, fewer than MAX_FAILURES
 //                failures. Post these.
@@ -121,7 +122,9 @@ async function deployState(repo, mr) {
 
 async function list() {
   const cutoff = new Date(CUTOFF);
-  const out = { cutoff: cutoff.toISOString(), pending: [], needs_screen: [], waiting: [], skipped: [] };
+  // Only the glab user's own MRs: other authors post theirs from their own setup.
+  const me = await glabApi('user');
+  const out = { cutoff: cutoff.toISOString(), author: me.username, pending: [], needs_screen: [], waiting: [], skipped: [] };
   let cards = new Map();
   try {
     cards = await cardsByMr(await botToken());
@@ -130,7 +133,7 @@ async function list() {
   }
   for (const repo of REPOS) {
     const mrs = await glabList(
-      `${project(repo)}/merge_requests?state=merged&target_branch=main&updated_after=${encodeURIComponent(cutoff.toISOString())}`,
+      `${project(repo)}/merge_requests?state=merged&target_branch=main&author_id=${me.id}&updated_after=${encodeURIComponent(cutoff.toISOString())}`,
     );
     for (const mr of mrs) {
       if (!mr.merged_at || new Date(mr.merged_at) < cutoff) continue;

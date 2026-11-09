@@ -1,7 +1,7 @@
 ---
 name: post-report-to-slack
-description: Announce a shipped x2u change in Slack #devlog with before/after screenshots of production. `old <MR>` captures the OLD screen while the MR is unmerged; `new <MR>` captures NEW once main has deployed it and posts a title, a plain-language paragraph and up to two technical ones. Use before merging an MR with a user-visible change, after it deploys, or whenever the user asks to post a report, announce a release or share before/after screenshots in Slack.
-argument-hint: "old|new <MR url or !iid>"
+description: Announce a shipped x2u change in Slack #devlog with before/after screenshots of production. `old <MR>` captures the OLD screen while the MR is unmerged and is required before merging any x2u MR whose Screens is not none (a hook blocks the merge otherwise); `new <MR>` captures NEW once main has deployed it and posts a title, a plain-language paragraph and up to two technical ones; `sweep` posts `new` for every deployed MR still owed one. Use before merging an MR with a user-visible change, after it deploys, from the devlog routine, or whenever the user asks to post a report, announce a release or share before/after screenshots in Slack.
+argument-hint: "old|new <MR url or !iid> | sweep"
 ---
 
 # post-report-to-slack
@@ -11,6 +11,13 @@ needs a real picture of the change, not a diff. Prod serves one version at a
 time, which forces two runs: `old` while the MR is still unmerged, `new` once
 the main pipeline has deployed it. Usually different sessions run them, so
 `old` leaves everything `new` needs on disk.
+
+Two things enforce this outside the prose. A PreToolUse hook
+(`scripts/hook-gate.sh`, registered in `~/.claude/settings.json`) denies
+`glab mr create` in x2u/{ai7,salon,admick,gcal} without a `Screens:` line, and
+`glab mr merge` of an MR whose Screens is not `none` until `$DIR/old.png`
+exists. `DEVLOG_SKIP=1 glab mr merge ...` waives it for an MR the user waived.
+A routine runs `sweep`, which posts `new` unattended once the deploy is live.
 
 Scripts live in `~/.claude/skills/post-report-to-slack/scripts/`. First use on
 a machine: `npm ci` in `~/.claude/skills/post-report-to-slack/` (playwright is
@@ -35,11 +42,19 @@ site. Name the directory in your report.
 ## 1. Know what to show
 
 Resolve the MR with glab (`glab mr view <iid> -R x2u/<repo> -F json`). Read
-its description for a `Screens:` line: a URL under `https://app.x2u.ai/ai7`
-and the element that shows the change, or `none`. Without one, work out the
-screen from the diff (routes and components touched) and confirm it with the
-user. A backend-only change or `Screens: none` gets no images; say so in the
-post.
+its description for a `Screens:` line: a page under `https://app.x2u.ai/`
+(`/ai7/...`, the salon console `/salon/...`, the admin console
+`/console/...`; often written as just the path, with `:id` placeholders) and
+the element that shows the change, or `none`. The value is the rest of that
+line, or, when the line ends at the colon, the lines below it up to the next
+blank line (often a `- ` list of several screens; capture the first, or the
+one the title is about). Without a Screens line, work out the screen from the
+diff (routes and components touched) and confirm it with the user (in
+`sweep`, decide yourself). A backend-only change or `Screens: none` gets no
+images; say so in the post.
+
+All x2u apps sit on the one `app.x2u.ai` origin behind the same sign-in, so
+`capture.mjs --url '/salon/...'` or `'/console/...'` works like `/ai7/...`.
 
 The seeded Review org has one "Review Demo Agent" and one web conversation to
 point at. Anything else the screen needs, set up as the test account would,
@@ -94,19 +109,55 @@ say which is which.
 
 ## Mode `new <MR>`
 
-1. Confirm the MR is merged and its merge commit has deployed: find the main
-   pipeline for `merge_commit_sha` (`glab api
-   "projects/x2u%2F<repo>/pipelines?sha=<sha>&ref=main"`) and check its
-   `deploy:production` and `smoke:production` jobs succeeded (a run of
-   `rollback:production` means NEW is not live). Not deployed yet → stop and say when to retry.
+1. Confirm the MR is merged and its commit has deployed: find the main
+   pipeline for `merge_commit_sha` (null on a fast-forward merge: then
+   `squash_commit_sha`, else `sha`) with `glab api
+   "projects/x2u%2F<repo>/pipelines?sha=<sha>&ref=main"` and check its
+   `deploy:production` and `smoke:production` jobs succeeded (salon and gcal
+   have no smoke job; admick deploys in a child pipeline; a run of
+   `rollback:production` means NEW is not live). `sweep.mjs` does exactly
+   this check. Not deployed yet → stop and say when to retry.
 2. Re-run `$DIR/recipe.md`'s commands with `--out $DIR/new.png`, annotate to
    `$DIR/new-annotated.png`, and Read it. If the element moved, adjust the
    selectors, not the crop logic.
 3. No `$DIR/old-annotated.png` → post anyway, and the text says why there is
    no before picture.
-4. Write the body (below) to `$DIR/body.md`, then dry-run, show the user the
-   title, body and images, and post for real only after they agree.
-5. Report the permalink.
+4. Write the body (below) to `$DIR/body.md`, dry-run it and Read the
+   payload as a self-check (title, paragraph 1 in plain language, images and
+   alt text present, links right), then post for real. No approval step.
+5. Report the permalink. `post.mjs` writes `$DIR/posted.json`
+   `{permalink, ts}`, which marks the MR done for `sweep`.
+
+## Mode `sweep`
+
+Run by the devlog routine; also fine by hand.
+
+```bash
+node $S/sweep.mjs            # JSON {cutoff, pending, waiting, skipped}; read-only
+```
+
+It lists MRs in x2u/{ai7,salon,admick,gcal} merged after its `CUTOFF`
+(no backfill), with a Screens line that is not `none`, no `posted.json`,
+fewer than 3 recorded failures, and a live deploy (`deploy:production` and,
+where the repo has one, `smoke:production` succeeded with no
+`rollback:production` run, on its own main pipeline or a later one; admick's
+deploy job is in a child pipeline and is followed). `waiting` = merged but not
+live yet: leave it for the next sweep. `skipped` says why for the rest.
+
+For each `pending` entry, run mode `new` on its `url` with no questions to
+anyone: no `recipe.md` (`has_recipe: false`, e.g. merged without `old`) →
+build the capture from the `screens` value and the diff yourself. Any step
+that fails (capture, selectors gone, Slack error) →
+
+```bash
+node $S/sweep.mjs fail <repo>-<iid> "<one-line reason>"
+```
+
+which appends to `$DIR/failed.md`; the next sweep retries. The third failure
+posts one line to #dev (`C0ASA6TH7QQ`) with the bot and the MR drops out of
+the sweep; delete `failed.md` to retry it. `fail --dry-run` shows what it
+would write and post. Move on to the next MR after a failure. End with one
+line per MR: posted <permalink> | waiting (<reason>) | failed (<reason>).
 
 ## 3. Post to #devlog (channel `C0CCSDAS7NG`)
 

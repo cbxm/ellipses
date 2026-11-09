@@ -1,6 +1,7 @@
 // Shared by hook-gate.mjs, sweep.mjs and post.mjs.
 
 import { execFile } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -24,14 +25,25 @@ export function x2uRepo(ref) {
   return m && REPOS.includes(m[1]) ? m[1] : null;
 }
 
+// {repo, iid} from an x2u MR url, or from `!iid` / `iid` plus a repo ref.
+export function mrRef(mr, repoRef) {
+  const url = /^https?:\/\/[^/]+\/(.+?)\/-\/merge_requests\/(\d+)/.exec(mr ?? '');
+  if (url) return x2uRepo(url[1]) ? { repo: x2uRepo(url[1]), iid: url[2] } : null;
+  const n = /^!?(\d+)$/.exec(mr ?? '');
+  const repo = repoRef && x2uRepo(repoRef);
+  return n && repo ? { repo, iid: n[1] } : null;
+}
+
 export function mrUrl(repo, iid) {
   return `https://gitlab.com/${GROUP}/${repo}/-/merge_requests/${iid}`;
 }
 
+const NONE = /^[`*_]*(none|n\/a|no user[- ]visible changes?)(?![\w/])/i;
+
 // The `Screens:` value of an MR description. The value is the rest of the
 // line, or, when that is empty, the lines after it up to the next blank line.
 //   { state: 'missing' }            no Screens line
-//   { state: 'none', value }        Screens: none
+//   { state: 'none', value }        Screens: none (or n/a, no user-visible change)
 //   { state: 'set', value }         anything else
 export function parseScreens(description) {
   const lines = (description ?? '').split(/\r?\n/);
@@ -50,7 +62,7 @@ export function parseScreens(description) {
     value = rest.join('\n');
   }
   if (!value) return { state: 'missing' };
-  return { state: /^[`*_]*none\b/i.test(value) ? 'none' : 'set', value };
+  return { state: NONE.test(value) ? 'none' : 'set', value };
 }
 
 const run = promisify(execFile);
@@ -72,4 +84,43 @@ export async function glabList(path) {
 
 export function project(repo) {
   return `projects/${encodeURIComponent(`${GROUP}/${repo}`)}`;
+}
+
+export async function botToken() {
+  let token;
+  try {
+    token = (await readFile(TOKEN_FILE, 'utf8')).trim();
+  } catch {
+    throw new Error(`${TOKEN_FILE} is missing; paste the bot's xoxb- token into it (chmod 600)`);
+  }
+  if (!token.startsWith('xoxb-')) throw new Error(`${TOKEN_FILE} does not hold a bot (xoxb-) token`);
+  return token;
+}
+
+// MR url -> ts of the newest card in the channel whose buttons link that MR,
+// over the channel's last 1000 messages.
+export async function cardsByMr(token, channel = DEVLOG_CHANNEL) {
+  const cards = new Map();
+  let cursor;
+  for (let page = 0; page < 5; page++) {
+    const body = new URLSearchParams({ channel, limit: '200', ...(cursor ? { cursor } : {}) });
+    const res = await fetch('https://slack.com/api/conversations.history', {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}` },
+      body,
+    });
+    const json = await res.json();
+    if (!json.ok) throw new Error(`conversations.history: ${json.error}`);
+    for (const m of json.messages) {
+      for (const b of m.blocks ?? []) {
+        if (b.type !== 'actions') continue;
+        for (const e of b.elements ?? []) {
+          if (/\/-\/merge_requests\/\d+$/.test(e.url ?? '') && !cards.has(e.url)) cards.set(e.url, m.ts);
+        }
+      }
+    }
+    cursor = json.response_metadata?.next_cursor;
+    if (!json.has_more || !cursor) break;
+  }
+  return cards;
 }

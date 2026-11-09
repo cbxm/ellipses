@@ -15,9 +15,16 @@ the main pipeline has deployed it. Usually different sessions run them, so
 Two things enforce this outside the prose. A PreToolUse hook
 (`scripts/hook-gate.sh`, registered in `~/.claude/settings.json`) denies
 `glab mr create` in x2u/{ai7,salon,admick,gcal} without a `Screens:` line, and
-`glab mr merge` of an MR whose Screens is not `none` until `$DIR/old.png`
-exists. `DEVLOG_SKIP=1 glab mr merge ...` waives it for an MR the user waived.
-A routine runs `sweep`, which posts `new` unattended once the deploy is live.
+`glab mr merge` of an MR without a Screens line, or whose Screens is not
+`none` (`n/a` and `no user-visible change` count as none), until
+`$DIR/old-annotated.png` exists. `DEVLOG_SKIP=1 glab mr merge ...` waives it
+for an MR the user waived. It sees only `glab mr create|merge`: merging
+through `glab api .../merge` or the GitLab web UI bypasses it. A routine runs
+`sweep`, which posts `new` unattended once the deploy is live.
+
+**Who approves a post.** `new` invoked by a person: dry-run, show them the
+title, body and images, and post only after they agree. `sweep` (the routine,
+or a person asking for a sweep): posts without asking. Nowhere else differs.
 
 Scripts live in `~/.claude/skills/post-report-to-slack/scripts/`. First use on
 a machine: `npm ci` in `~/.claude/skills/post-report-to-slack/` (playwright is
@@ -124,21 +131,24 @@ say which is which.
    no before picture.
 4. Write the body (below) to `$DIR/body.md`, dry-run it and Read the
    payload as a self-check (title, paragraph 1 in plain language, images and
-   alt text present, links right), then post for real. No approval step.
+   alt text present, links right). Then approval as set out at the top
+   (person: show and wait for agreement; `sweep`: none), then post for real.
 5. Report the permalink. `post.mjs` writes `$DIR/posted.json`
-   `{permalink, ts}`, which marks the MR done for `sweep`.
+   `{ts, permalink}` as soon as the card is up, which marks the MR done for
+   `sweep`. If #devlog already has a card linking the MR (posted from another
+   machine), it posts nothing, records that card, and prints its permalink.
 
 ## Mode `sweep`
 
 Run by the devlog routine; also fine by hand.
 
 ```bash
-node $S/sweep.mjs            # JSON {cutoff, pending, waiting, skipped}; read-only
+node $S/sweep.mjs   # JSON {cutoff, pending, needs_screen, waiting, skipped}; read-only
 ```
 
 It lists MRs in x2u/{ai7,salon,admick,gcal} merged after its `CUTOFF`
-(no backfill), with a Screens line that is not `none`, no `posted.json`,
-fewer than 3 recorded failures, and a live deploy (`deploy:production` and,
+(no backfill), whose Screens is not `none`, with no `posted.json`, no card in
+#devlog already linking them, fewer than 3 recorded failures, and a live deploy (`deploy:production` and,
 where the repo has one, `smoke:production` succeeded with no
 `rollback:production` run, on its own main pipeline or a later one; admick's
 deploy job is in a child pipeline and is followed). `waiting` = merged but not
@@ -146,7 +156,11 @@ live yet: leave it for the next sweep. `skipped` says why for the rest.
 
 For each `pending` entry, run mode `new` on its `url` with no questions to
 anyone: no `recipe.md` (`has_recipe: false`, e.g. merged without `old`) →
-build the capture from the `screens` value and the diff yourself. Any step
+build the capture from the `screens` value and the diff yourself. Each
+`needs_screen` entry has no Screens line: read the diff (`glab mr diff <iid>
+-R x2u/<repo>`), pick the screen as in section 1 and run `new`; if nothing
+user-visible changed, post text only (no images, `--tag "Backend only:gray"`).
+Any step
 that fails (capture, selectors gone, Slack error) →
 
 ```bash
@@ -158,6 +172,10 @@ posts one line to #dev (`C0ASA6TH7QQ`) with the bot and the MR drops out of
 the sweep; delete `failed.md` to retry it. `fail --dry-run` shows what it
 would write and post. Move on to the next MR after a failure. End with one
 line per MR: posted <permalink> | waiting (<reason>) | failed (<reason>).
+
+`post.mjs` needs `--mr` as the MR url, or `--mr !<iid> -R x2u/<repo>`, for any
+#devlog post; without it, it refuses rather than post a card the sweep cannot
+mark done.
 
 ## 3. Post to #devlog (channel `C0CCSDAS7NG`)
 

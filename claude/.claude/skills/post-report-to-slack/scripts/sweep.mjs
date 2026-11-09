@@ -2,10 +2,14 @@
 // Devlog sweep: which merged x2u MRs still owe a #devlog post.
 //
 //   sweep.mjs [--dry-run]
-//       Prints JSON {cutoff, pending, waiting, skipped}. Read-only.
-//       pending: merged after CUTOFF, Screens not none, deployed to prod, no
-//                posted.json, fewer than MAX_FAILURES failures. Post these.
-//       waiting: same, but the deploy is not live yet. Try next sweep.
+//       Prints JSON {cutoff, pending, needs_screen, waiting, skipped}.
+//       Read-only (it reads #devlog history with the bot).
+//       pending: merged after CUTOFF, Screens set, deployed to prod, no
+//                posted.json, no card in #devlog, fewer than MAX_FAILURES
+//                failures. Post these.
+//       needs_screen: the same, but the MR has no Screens line; the screen
+//                (or a text-only post) has to come from the diff.
+//       waiting: either kind, deploy not live yet. Try next sweep.
 //       skipped: everything else after the cutoff, with the reason.
 //
 //   sweep.mjs fail <repo>-<iid> <reason> [--dry-run]
@@ -21,7 +25,8 @@ import { parseArgs } from 'node:util';
 import {
   DEV_CHANNEL,
   REPOS,
-  TOKEN_FILE,
+  botToken,
+  cardsByMr,
   devlogDir,
   glabApi,
   glabList,
@@ -116,7 +121,13 @@ async function deployState(repo, mr) {
 
 async function list() {
   const cutoff = new Date(CUTOFF);
-  const out = { cutoff: cutoff.toISOString(), pending: [], waiting: [], skipped: [] };
+  const out = { cutoff: cutoff.toISOString(), pending: [], needs_screen: [], waiting: [], skipped: [] };
+  let cards = new Map();
+  try {
+    cards = await cardsByMr(await botToken());
+  } catch (e) {
+    out.warning = `could not read #devlog history (${e.message}); post.mjs still refuses to post a second card`;
+  }
   for (const repo of REPOS) {
     const mrs = await glabList(
       `${project(repo)}/merge_requests?state=merged&target_branch=main&updated_after=${encodeURIComponent(cutoff.toISOString())}`,
@@ -130,12 +141,12 @@ async function list() {
         out.skipped.push({ ...base, reason: 'Screens: none' });
         continue;
       }
-      if (screens.state === 'missing') {
-        out.skipped.push({ ...base, reason: 'no Screens line' });
-        continue;
-      }
       if (await exists(join(dir, 'posted.json'))) {
         out.skipped.push({ ...base, reason: 'posted' });
+        continue;
+      }
+      if (cards.has(base.url)) {
+        out.skipped.push({ ...base, reason: `already in #devlog (ts ${cards.get(base.url)}); post.mjs records it if run` });
         continue;
       }
       const failed = await failures(dir);
@@ -146,7 +157,7 @@ async function list() {
       const deploy = await deployState(repo, mr);
       const entry = {
         ...base,
-        screens: screens.value,
+        screens: screens.value ?? null,
         dir,
         merged_at: mr.merged_at,
         author: mr.author?.name,
@@ -155,15 +166,16 @@ async function list() {
         failures: failed,
         deploy: deploy.pipeline,
       };
-      if (deploy.live) out.pending.push(entry);
-      else out.waiting.push({ ...base, dir, reason: deploy.why, deploy: deploy.pipeline });
+      if (!deploy.live) out.waiting.push({ ...base, dir, reason: deploy.why, deploy: deploy.pipeline });
+      else if (screens.state === 'missing') out.needs_screen.push(entry);
+      else out.pending.push(entry);
     }
   }
   console.log(JSON.stringify(out, null, 2));
 }
 
 async function postToDev(text) {
-  const token = (await readFile(TOKEN_FILE, 'utf8').catch(() => die(`${TOKEN_FILE} is missing`))).trim();
+  const token = await botToken().catch((e) => die(e.message));
   const res = await fetch('https://slack.com/api/chat.postMessage', {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json; charset=utf-8' },

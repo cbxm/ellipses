@@ -3,7 +3,9 @@
 //
 // `glab mr create` must carry a `Screens:` line in its description.
 // `glab mr merge` of an MR whose Screens is not `none` needs
-// <devlog dir>/old.png first, because prod serves OLD only until the merge.
+// <devlog dir>/old-annotated.png first, because prod serves OLD only until
+// the merge. A command whose repo cannot be worked out (cd "$VAR", -R "$R")
+// is allowed with a visible warning.
 //
 // A `DEVLOG_SKIP=1` assignment before the glab call (or in the environment)
 // waives both. Anything this script cannot work out is allowed with a warning.
@@ -17,6 +19,8 @@ import { devlogDir, glabApi, mrUrl, parseScreens, project, x2uRepo } from './lib
 
 const run = promisify(execFile);
 const SCREENS_HINT = '`Screens: <https://app.x2u.ai/... url> — <element that shows the change>` or `Screens: none`';
+const READ_HINT = 'The gate reads only a literal -d/--description value (a heredoc inside "$(cat <<EOF ...)" is fine) or an existing --description-file; it cannot see $VAR, $\'...\', --description-file -, --fill, --template or the editor.';
+const UNKNOWN = Symbol('unknown repo');
 
 function emit(obj) {
   process.stdout.write(JSON.stringify(obj) + '\n');
@@ -190,16 +194,30 @@ function expandHome(p) {
   return p === '~' ? homedir() : p.startsWith('~/') ? join(homedir(), p.slice(2)) : p;
 }
 
-// Commands as word lists, each with the directory it runs in and whether a
-// DEVLOG_SKIP=1 assignment came before it.
+const literal = (w) => !/[$`]/.test(w);
+
+// Commands as word lists, each with the directory it runs in (null when a cd
+// or pushd target is not a literal path) and whether a DEVLOG_SKIP=1
+// assignment came before it.
 function commands(src, cwd) {
   const cmds = [];
   let dir = cwd;
+  const stack = [];
   let skip = process.env.DEVLOG_SKIP === '1';
   let cur = [];
+  const chdir = (w) => {
+    if (w === undefined) return homedir();
+    if (!literal(w) || w === '-' || dir === null) return null;
+    return resolve(dir, expandHome(unquote(w)));
+  };
   const end = () => {
     if (cur.length) {
-      if (cur[0] === 'cd' && cur[1]) dir = resolve(dir, expandHome(unquote(cur[1])));
+      const target = cur.slice(1).find((w) => !w.startsWith('-') || w === '-');
+      if (cur[0] === 'cd') dir = chdir(target);
+      else if (cur[0] === 'pushd') {
+        stack.push(dir);
+        dir = chdir(target);
+      } else if (cur[0] === 'popd') dir = stack.length ? stack.pop() : null;
       if (cur.some((w) => /^DEVLOG_SKIP=['"]?1['"]?$/.test(w))) skip = true;
       cmds.push({ words: cur, dir, skip });
     }
@@ -257,35 +275,49 @@ async function originRepo(dir) {
   }
 }
 
+// The x2u repo the glab call targets, null for a non-x2u repo, UNKNOWN when
+// -R or the working directory is not literal.
 async function repoFor(get, dir) {
   const r = get('-R', '--repo');
-  if (r !== undefined) return x2uRepo(unquote(r));
+  if (r !== undefined) return literal(r) ? x2uRepo(unquote(r)) : UNKNOWN;
+  if (dir === null) return UNKNOWN;
   return originRepo(dir);
 }
+
+const unknownRepo = (sub) =>
+  warn(`cannot tell which repo this glab mr ${sub} targets (cd/pushd to a variable, or a non-literal -R). If it is x2u ai7/salon/admick/gcal, apply the devlog rules by hand, or rerun with a literal path or -R x2u/<repo>`);
 
 async function checkCreate({ args, dir }) {
   const { get } = parseArgs('create', args);
   const repo = await repoFor(get, dir);
+  if (repo === UNKNOWN) return unknownRepo('create');
   if (!repo) return;
 
   let text;
   const file = get('--description-file');
   const desc = get('-d', '--description');
-  if (typeof file === 'string' && file !== '-') {
+  if (typeof file === 'string') {
+    if (file === '-' || !literal(file) || dir === null) {
+      return deny(`x2u/${repo} MR: the devlog gate cannot read --description-file ${file}. ${READ_HINT}`);
+    }
+    const path = resolve(dir, expandHome(unquote(file)));
+    if (!existsSync(path)) {
+      return deny(`x2u/${repo} MR: --description-file ${path} does not exist yet. Write the file in a separate command first, then run glab mr create.`);
+    }
     try {
-      text = readFileSync(resolve(dir, expandHome(unquote(file))), 'utf8');
+      text = readFileSync(path, 'utf8');
     } catch (e) {
-      return warn(`cannot read --description-file ${file}: ${e.code ?? e.message}`);
+      return warn(`cannot read --description-file ${path}: ${e.code ?? e.message}`);
     }
   } else if (typeof desc === 'string' && desc !== '-') {
     text = unquote(desc);
   }
   if (text === undefined) {
-    return deny(`x2u/${repo} MR needs a description with a Screens line: pass --description containing ${SCREENS_HINT}. (--fill, --template and the editor are not checked, so write the description explicitly.)`);
+    return deny(`x2u/${repo} MR needs a description with a Screens line: pass --description containing ${SCREENS_HINT}. ${READ_HINT}`);
   }
   const screens = parseScreens(text);
   if (screens.state === 'missing') {
-    return deny(`x2u/${repo} MR description has no Screens line. Add ${SCREENS_HINT} on its own line, written from the diff.`);
+    return deny(`x2u/${repo} MR description has no Screens line. Add ${SCREENS_HINT} on its own line, written from the diff. ${READ_HINT}`);
   }
   const auto = get('--auto-merge');
   if (screens.state === 'set' && auto !== undefined && auto !== 'false') {
@@ -308,6 +340,7 @@ async function checkMerge({ args, dir }) {
     const n = target && /^!?(\d+)$/.exec(target);
     if (n) iid = n[1];
   }
+  if (repo === UNKNOWN || (repo && !target && dir === null)) return unknownRepo('merge');
   if (!repo) return;
 
   let mr;
@@ -330,8 +363,8 @@ async function checkMerge({ args, dir }) {
     return deny(`x2u/${repo} !${iid} has no Screens line. Add ${SCREENS_HINT} to its description (glab mr update ${iid} -R x2u/${repo} --description ...), then merge; if Screens is not none, run /post-report-to-slack old !${iid} first.`);
   }
   const dirPath = devlogDir(repo, iid);
-  if (existsSync(join(dirPath, 'old.png'))) return;
-  deny(`x2u/${repo} !${iid} has Screens set but ${dirPath}/old.png is missing. Run \`/post-report-to-slack old ${mrUrl(repo, iid)}\` first: prod still serves OLD only until this merge. If the user waived the devlog for this MR, prefix the merge with DEVLOG_SKIP=1.`);
+  if (existsSync(join(dirPath, 'old-annotated.png'))) return;
+  deny(`x2u/${repo} !${iid} has Screens set but ${dirPath}/old-annotated.png is missing. Run \`/post-report-to-slack old ${mrUrl(repo, iid)}\` first: prod still serves OLD only until this merge. If the user waived the devlog for this MR, prefix the merge with DEVLOG_SKIP=1.`);
 }
 
 let input;

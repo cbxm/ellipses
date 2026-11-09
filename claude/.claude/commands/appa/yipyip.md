@@ -30,7 +30,7 @@ Take a builder's finished branch to an open PR/MR.
    ```
    GitHub: `gh pr create --title … --body …`. GitLab: `glab mr create --title … --description … --remove-source-branch`. Body: 2–3 summary bullets from the builder's report, a Test Plan checklist, the issue reference if there is one, and for an x2u GitLab MR (ai7, salon, admick, gcal) a `Screens: <url under https://app.x2u.ai/> — <element that shows the change>` line written from the diff and builder report, or `Screens: none` when nothing user-visible changed. A hook denies `glab mr create` in those repos without it. Never a Claude Code footer.
 
-7. **Devlog.** Right after the MR opens, if `Screens:` is not `none`, run `/post-report-to-slack old <MR>` (prod serves OLD only until the merge; a hook denies `glab mr merge` until `.work/devlog/<repo>-<iid>/old.png` exists). Do it before the CI watch, not after.
+7. **Devlog.** Right after the MR opens, if `Screens:` is not `none`, run `/post-report-to-slack old <MR>` (prod serves OLD only until the merge; a hook denies `glab mr merge` until `.work/devlog/<repo>-<iid>/old-annotated.png` exists). Do it before the CI watch, not after.
 
 8. **Watch CI** with the Monitor tool (or a single long-interval check), never a sleep loop. On GitLab the MR pipeline runs on `refs/merge-requests/<iid>/head`, NOT the branch: get its id from `glab api projects/<enc>/merge_requests/<iid>/pipelines` and poll `pipelines/<id>` + `pipelines/<id>/jobs`; a `--branch` filter finds nothing. On GitHub, `gh pr checks <n> --json name,bucket`. On failure: relay to the builder with the job log excerpt, then re-push. CI must be green before reporting done.
 

@@ -5,7 +5,7 @@
 // --collapse, in a collapsed container on the card).
 //
 //   post.mjs --title <text> --body <file>
-//            [--task <url>] [--mr <url>] [--deploy <url>]
+//            [--task <url>] [--mr <url> | --mr !<iid> -R x2u/<repo>] [--deploy <url>]
 //            [--author <name>] [--shipped <YYYY-MM-DD | ISO 8601 time>]
 //            [--new <png> --new-alt <text>] [--old <png> --old-alt <text>]
 //            [--table <tsv file>] [--chart <json file>] [--tag "<text>[:<color>]"]
@@ -18,15 +18,17 @@
 // with glab. --dry-run prints the payloads and posts nothing. A real post
 // prints the card's permalink. --thread-ts posts only the thread reply under
 // an existing card, for when the card went up but its reply failed.
+// A #devlog post needs an x2u --mr. Before posting it looks for a card in
+// #devlog that already links that MR (posted from another host, say); if
+// there is one it posts nothing and records that card instead. The card's
+// {ts, permalink} go to <MR devlog dir>/posted.json, which the sweep reads
+// as done.
 
 import { execFileSync } from 'node:child_process';
-import { readFile, stat } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { basename, join } from 'node:path';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
-
-const TOKEN_FILE = join(homedir(), '.config/x2u-devlog/bot-token');
-const DEVLOG = 'C0CCSDAS7NG';
+import { DEVLOG_CHANNEL as DEVLOG, botToken, cardsByMr, devlogDir, mrRef, mrUrl } from './lib.mjs';
 const LINKS = [
   ['task', 'See Task'],
   ['mr', 'See MR'],
@@ -49,6 +51,7 @@ const { values: a } = parseArgs({
     body: { type: 'string' },
     task: { type: 'string' },
     mr: { type: 'string' },
+    repo: { type: 'string', short: 'R' },
     deploy: { type: 'string' },
     author: { type: 'string' },
     shipped: { type: 'string' },
@@ -81,6 +84,15 @@ if (paragraphs.length === 0) die(`${a.body} is empty`);
 if (paragraphs.length > 3) die(`${a.body} has ${paragraphs.length} paragraphs; the ceiling is 3`);
 const [lead, ...technical] = paragraphs;
 for (const p of paragraphs) if (p.length > 3000) die("a paragraph is over Slack's 3000-char section limit");
+
+// Any x2u repo can post; REPOS limits only the merge gate and the sweep.
+const mr = a.mr ? mrRef(a.mr, a.repo, { any: true }) : null;
+if (a.mr && !mr && !/^https?:\/\//.test(a.mr)) die(`--mr ${a.mr} needs -R x2u/<repo>, or pass the MR url`);
+if (mr) a.mr = mrUrl(mr.repo, mr.iid);
+if (a.channel === DEVLOG && !mr) {
+  die('a #devlog post needs --mr with an x2u MR (url, or !iid with -R x2u/<repo>); its posted.json is what marks the MR done');
+}
+const postedFile = mr && join(devlogDir(mr.repo, mr.iid), 'posted.json');
 
 const replyOnly = a['thread-ts'];
 if (replyOnly && a.collapse) die('--thread-ts and --collapse conflict: a collapsed card has no thread reply');
@@ -357,13 +369,7 @@ if (a['dry-run']) {
   process.exit(0);
 }
 
-let token;
-try {
-  token = (await readFile(TOKEN_FILE, 'utf8')).trim();
-} catch {
-  die(`${TOKEN_FILE} is missing; paste the bot's xoxb- token into it (chmod 600)`);
-}
-if (!token.startsWith('xoxb-')) die(`${TOKEN_FILE} does not hold a bot (xoxb-) token`);
+const token = await botToken().catch((e) => die(e.message));
 
 class SlackError extends Error {
   constructor(method, code, details) {
@@ -372,6 +378,15 @@ class SlackError extends Error {
     this.details = details ?? [];
   }
 }
+
+// Marks the MR as posted for the sweep. Written as soon as the card is up,
+// so a later failure (permalink, thread reply) never leads to a second card.
+async function recordPosted(record) {
+  if (!postedFile || a.channel !== DEVLOG) return;
+  await mkdir(dirname(postedFile), { recursive: true });
+  await writeFile(postedFile, JSON.stringify(record, null, 2) + '\n');
+}
+
 
 async function api(method, params) {
   const body = new URLSearchParams();
@@ -449,24 +464,40 @@ async function postWithRetry(payload, origins) {
 }
 
 try {
+  if (!replyOnly && a.channel === DEVLOG) {
+    const priorTs = (await cardsByMr(token, a.channel)).get(a.mr);
+    if (priorTs) {
+      const { permalink } = await api('chat.getPermalink', { channel: a.channel, message_ts: priorTs });
+      await recordPosted({ permalink, ts: priorTs, found_existing: true });
+      console.error(`post: #devlog already has a card for ${a.mr}; posted nothing and recorded it in ${postedFile}`);
+      console.log(permalink);
+      process.exit(0);
+    }
+  }
+
   const newId = a.new && !replyOnly ? await upload(a.new, 'new') : null;
   const oldId = a.old ? await upload(a.old, 'old') : null;
   for (const id of [newId, oldId]) if (id) await waitProcessed(id);
 
   const { card, thread, origins } = payloads({ newFileId: newId, oldFileId: oldId }, extras);
   const posted = replyOnly ? { channel: a.channel, ts: replyOnly } : await postWithRetry(card, origins);
+  if (!replyOnly) {
+    console.error(`post: card ts ${posted.ts}`);
+    await recordPosted({ ts: posted.ts, ...(thread ? { thread_pending: true } : {}) });
+  }
   const { permalink } = await api('chat.getPermalink', { channel: posted.channel, message_ts: posted.ts });
-  if (!replyOnly) console.error(`post: card ts ${posted.ts}`);
   if (thread) {
     try {
       await postWithRetry({ ...thread, thread_ts: posted.ts });
     } catch (e) {
       console.error(`post: card is up but the thread reply failed: ${e.message}`);
       console.error(`post: re-run with --thread-ts ${posted.ts} to post only the reply`);
+      await recordPosted({ permalink, ts: posted.ts, thread_failed: true });
       console.log(permalink);
       process.exit(1);
     }
   }
+  await recordPosted({ permalink, ts: posted.ts });
   console.log(permalink);
 } catch (e) {
   die(e.message);

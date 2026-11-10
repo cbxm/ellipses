@@ -63,5 +63,19 @@
   "remoteControlAtStartup": true,
   "inputNeededNotifEnabled": true,
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/skills/post-report-to-slack/scripts/hook-gate.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
 }

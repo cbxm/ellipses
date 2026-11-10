@@ -7,6 +7,9 @@ claude/.claude/paste-cache/
 # Secrets (should never be committed)
 gh/.config/gh/hosts.yml
 
+# Customer data (this repo is public)
+claude/.claude/skills/hypercare/customers.md
+
 # Claude Code harness state
 .claude/worktrees/
 claude/.claude/skills/synced/

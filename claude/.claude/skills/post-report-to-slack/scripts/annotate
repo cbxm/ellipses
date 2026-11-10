@@ -14,7 +14,10 @@ import math
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+try:
+    from PIL import Image, ImageDraw
+except ImportError:
+    sys.exit("annotate: Pillow missing; install it with `sudo apt install python3-pil`")
 
 RED = (230, 30, 30, 255)
 CROP_PAD = 16  # CSS px of context kept around the parent

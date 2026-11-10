@@ -31,6 +31,8 @@ a machine: `npm ci` in `~/.claude/skills/post-report-to-slack/` (playwright is
 pinned to the version whose chromium is already in `~/.cache/ms-playwright`;
 if it reports a missing browser, the pin and the cache have drifted, so match
 the pin to an installed `chromium-<rev>` rather than downloading).
+`scripts/annotate` is python3 and needs Pillow: `sudo apt install python3-pil`
+(Ubuntu blocks `pip install --user`).
 
 Setup the scripts expect (they fail with instructions if missing):
 - `~/.config/x2u-devlog/prod-test-account.json` (chmod 600):

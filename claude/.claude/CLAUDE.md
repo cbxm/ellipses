@@ -23,7 +23,7 @@ Appa is how a session works, not a single session. Each session owns one objecti
 |---|---|---|
 | `scout` | Opus 5.5, medium | answer a question: find, trace, brief; never edits |
 | `builder` | Opus 5.5, xhigh | investigate and implement in a worktree; tests; resumable |
-| `reviewer` | Fable 5.1, high, fresh and cold | ranked findings on a diff; never edits |
+| `reviewer` | Fable (latest, `fable` alias), high, fresh and cold | ranked findings on a diff; never edits |
 | `test-runner` | Sonnet | run tests, return a summary; a repo-level one overrides |
 
 Model policy: Opus 5.5 for the session and every agent that reasons, except `reviewer`, which runs on Fable so its errors don't correlate with the builder's. Effort is set per agent in frontmatter (session `modelSettings` do not reach subagents). Sonnet only for test-runner and worktree-setup. Never Haiku. Ad hoc dispatches omit `model` and inherit the session's.

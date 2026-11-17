@@ -16,6 +16,9 @@ Path: @/tmux
 **Vim-style navigation**
 `h/j/k/l` for pane selection, `H/J/K/L` for resizing. `C-h/j/k/l` are repeatable (`-r` flag).
 
+**`M-=` / `M--` cycle panes and stay zoomed**
+Every other pane-selection key unzooms, so flipping through panes full-screen meant `o` then `z` each time. `select-pane -Z` keeps the zoom; unzoomed, it's just next/previous pane. `M-` rather than plain `=`/`-`, which are stock buffer keys, and because a plain key with `-r` swallows the next keystroke.
+
 **Split keys: u/i**
 `u` = horizontal (under), `i` = vertical (side-by-side). Mnemonic based on visual orientation.
 

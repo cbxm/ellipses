@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """Crop a screenshot to a parent element and mark the change in red.
 
   annotate in.png out.png [--crop BOX] [--circle BOX] [--arrow BOX] [--dpr N]
@@ -17,7 +17,7 @@ from pathlib import Path
 try:
     from PIL import Image, ImageDraw
 except ImportError:
-    sys.exit("annotate: Pillow missing; install it with `sudo apt install python3-pil`")
+    sys.exit(f"annotate: Pillow missing for {sys.executable}; install it with `sudo apt install python3-pil`")
 
 RED = (230, 30, 30, 255)
 CROP_PAD = 16  # CSS px of context kept around the parent

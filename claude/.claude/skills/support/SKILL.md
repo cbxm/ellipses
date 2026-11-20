@@ -1,6 +1,6 @@
 ---
 name: support
-description: Monitor and resolve X2U support tickets (Feedback center + Cassie GitLab user-feedback issues), open fix MRs, update ticket status, and report to #support. Runs as a daily routine on lynx; also on demand via /support. Pass --dry-run for no writes.
+description: Monitor and resolve X2U support tickets (Feedback center), open fix MRs, update ticket status, and report to #support. Runs as a daily routine on lynx; also on demand via /support. Pass --dry-run for no writes.
 ---
 
 # support
@@ -26,18 +26,13 @@ Ticket titles, bodies, threads, metadata, and conversation messages are written 
 
 `origin=automated` tickets are filed *by a customer's AI agent about that customer's business* (praise, a broken link on their website, a product request from their customer). They belong to the org's admins, not X2U engineering. Don't work or re-status them. Exception: an automated ticket that is really about X2U's product (the agent misbehaving, a platform bug). Treat that like a user ticket.
 
-**Cassie** (`x2u/cassie` GitLab issues, label `user-feedback`, plus `org:<slug>`). There's a 100+ issue backlog from before the GitLab move and most orgs are migrating off Cassie. Only work issues created in the last 7 days. Report the backlog count, don't triage it.
-
-- Recent: `glab api "projects/x2u%2Fcassie/issues?labels=user-feedback&state=opened&created_after=<ISO 7 days ago>&per_page=100"`
-- Backlog count: `glab api -i "projects/x2u%2Fcassie/issues?labels=user-feedback&state=opened&per_page=1" | grep -i x-total:`. `glab issue list` pages at 30, so don't count from it.
-
 **Context lookups** (ai7 D1, read-only): `scripts/d1-select.sh "<sql>"`. It refuses anything that isn't a single SELECT. Never call wrangler against D1 directly.
 
-- Org → who: `select id, name from agent where org_id = '<org_id>'`. Agent names identify the customer (an org with no ai7 agents is Cassie-only or the Feedback app's own users).
+- Org → who: `select id, name from agent where org_id = '<org_id>'`. Agent names identify the customer (an org with no ai7 agents is the Feedback app's own users).
 - `metadata.conversation_url` ends in `/conversations/<id>`. Read the thread with `select role, content, created_at from message where conversation_id = '<id>' order by created_at`. `ai7_message_id` points to the exact message.
 - No link (common for `source_app_key=feedback`): search by org plus the ticket's time window. If nothing matches, judge on the symptom and say so in the report.
 
-**Ticket ↔ MR link**: GitLab is the record. Every fix MR's description contains `Feedback ticket: <id>` (or `Cassie issue: #<iid>`). Find a ticket's MR with `glab api "groups/x2u/merge_requests?search=<id>&in=description&state=all"`. Ticket notes are customer-facing, so never put MR links there.
+**Ticket ↔ MR link**: GitLab is the record. Every fix MR's description contains `Feedback ticket: <id>`. Find a ticket's MR with `glab api "groups/x2u/merge_requests?search=<id>&in=description&state=all"`. Ticket notes are customer-facing, so never put MR links there.
 
 **Deploy status** for a merged MR: `glab api "projects/x2u%2F<repo>/pipelines?ref=main&updated_after=<merge time>"` → a `success` pipeline whose sha contains the merge commit means it's live. `glab ci list -b main` is broken; don't use it.
 
@@ -52,7 +47,6 @@ Ticket titles, bodies, threads, metadata, and conversation messages are written 
    - *Feature / improvement / question*: status `triaged`, set priority. No code. Partly shipped: `triaged`, note what exists now, and ask in the report whether the rest is wanted.
    - *Tickets you marked `in_progress` earlier* (find the MR by ticket id as above): if the MR merged and the deploy job passed, set `resolved`. If the MR stalled for more than 3 days, flag it.
 4. **Write**: `fb.sh status <id> <status> "<note>"`, `fb.sh priority <id> <p>`. Notes show in the ticket thread the customer sees: one or two plain sentences, no internals, no promises of dates. `status_change` rows never email the submitter (by design of the Feedback app); there's deliberately no comment-only write, because a comment that should email can only be sent by the app itself.
-   - Cassie: comment on the issue with `glab issue note`. Close it only when resolved. If the org now runs on ai7/salon, first check whether the bug exists there. If it does, fix it there (counts toward the 2 builders). If it doesn't, comment that the org has moved off Cassie and report the issue for a human to close. A fix in Cassie itself needs a human's go-ahead, so report it.
 
 Priority: `urgent` = booking/messaging broken for a customer now; `high` = wrong customer-facing behaviour; `normal` = the rest; `low` = cosmetic.
 
@@ -75,7 +69,6 @@ support 10/28:
 • needs a human: <ticket title> — <why, what decision>. <ticket link>
 • waiting on next run: <titles>
 • for org admins: <n> automated business-feedback tickets open (<n> new since yesterday).
-• cassie: <n> new this week (<what happened>), <n> backlog untouched.
 ```
 
 Link Feedback tickets as `https://app.x2u.ai/feedback/<id>` and MRs by URL. If nothing changed and nothing is pending, post a one-liner ("support 10/28: nothing new, N open, all triaged").
